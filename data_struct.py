@@ -59,7 +59,7 @@ nodes_data = {
     30: Node(30, 570, 210, "headwater", [53]),
     31: Node(31, 510, 120, "headwater", [54]),
     32: Node(32, 520, 80, "headwater", [54]),
-    33: Node(33, 150, 180, "junction", [4, 34, 42]),
+    33: Node(33, 150, 180, "junction", [34, 42, 4]),
     34: Node(34, 170, 210, "junction", [5, 33, 59]),
     35: Node(35, 230, 190, "junction", [2, 18, 59]),
     36: Node(36, 270, 250, "junction", [2, 20, 37]),
@@ -130,9 +130,15 @@ class Graph:
         self.adjacency_list.append(current_list)
 
     def add_edges(self, source, destination):
+        print('getting current list')
         current_list = self.adjacency_list[source]
+        print('got current list')
+        print('getting destination_node')
         destination_node = self.adjacency_list[destination].get_head()
+        print('got destination_node')
+        print('inserting .......')
         current_list.insert(destination_node)
+        print('inserted')
 
     def check_edge(self, source, destination):
         current_list = self.adjacency_list[source]
@@ -152,6 +158,7 @@ class Graph:
         return None
 
     def print(self):
+        print("Start printing ")
         for current_list in self.adjacency_list:
             current_node = current_list.get_head()
             while current_node:
@@ -162,13 +169,20 @@ class Graph:
     def populate_graph(self, data_list):
         for index in data_list:
             self.add_node(node=data_list[index])
-
+        
+        print('Populated the adjacency list')
+        print('proceeding to add adjacents to the nodes')
         for i in range(len(self.adjacency_list)):
             temp_node = self.adjacency_list[i].get_head()
+            print(f'For node : {temp_node.node_name} => ')
             for j in range(len(temp_node.adjacent)):
-                index = self.search_node(temp_node.adjacent[j])
-                if index is not None:
-                    self.add_edges(i, index)
+                destination_name = temp_node.adjacent[j]
+                destination_index = self.search_node(destination_name)
+                print(f'Searched and got index => {destination_index}')
+                if destination_index is not None:
+                    print(f'add edge with source : {i} and destionation: {destination_index}')
+                    self.add_edges(i, destination_index)
+                    print(f'Edge added from {i} to {destination_index}')
 
 
 graph = Graph()
