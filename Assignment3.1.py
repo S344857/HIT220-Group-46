@@ -1,11 +1,11 @@
 #Part 1- Creating dictionary with nodes
 
 class Node:
-    def __init__(self, x, y, node_type, adjacent_points):
+    def __init__(self, x, y, node, adjacent):
         self.x = x
         self.y = y
-        self.node_type = node_type
-        self.adjacent_points = adjacent_points
+        self.node = node
+        self.adjacent = adjacent
 
 # Creating the dictionary with nodes
 nodes_data = {
@@ -43,8 +43,8 @@ nodes_data = {
     "32": Node(520, 80, "headwater", [54]),
     "33": Node(150, 180, "junction", [4, 34, 42]),
     "34": Node(170, 210, "junction", [5, 33, 59]),
-    "35": Node(230, 190, "junction", [7, 18, 59]),
-    "36": Node(270, 250, "junction", [7, 20, 37]),
+    "35": Node(230, 190, "junction", [2, 18, 59]),
+    "36": Node(270, 250, "junction", [2, 20, 37]),
     "37": Node(280, 270, "junction", [16, 36, 39]),
     "38": Node(325, 335, "junction", [39, 41, 49]),
     "39": Node(320, 290, "junction", [37, 38, 55]),
@@ -73,7 +73,5 @@ nodes_data = {
 # Accessing individual nodes
 print(nodes_data["1"].x)
 print(nodes_data["2"].y)
-print(nodes_data["33"].node_type)
-print(nodes_data["44"].adjacent_points)
-
-#Finding Distance between nodes
+print(nodes_data["33"].node)
+print(nodes_data["44"].adjacent)
