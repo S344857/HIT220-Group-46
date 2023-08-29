@@ -1,11 +1,13 @@
+import math     # For calculating distance 
+
 class Node:
-    def __init__(self, x, y, type, adjacent):
+    def __init__(self, x: int, y: int, type: str, adjacent):
         self.x = x
         self.y = y
         self.type = type
         self.adjacent = adjacent
 
-# Creating the dictionary with nodes
+# node: (x, y, type, list of adjacent nodes)
 nodes_data = {
     1: Node(70, 100, "headwater", [42]),
     2: Node(230, 190, "junction", [19, 35, 36]),
@@ -68,59 +70,62 @@ nodes_data = {
     59: Node(190, 205, "junction", [34, 35, 17]),
 }
 
-class LinkedList:
-    def __init__(self, node, weight):
+class Edge:
+    def __init__(self, node: int, weight: float):
         self.node = node
-        self.weight = weight
-        self.next = None
+        self.weight = weight    # Represents distance approximation
+        # For our specific data set, each node only links to one other
+        #self.next = None
 
+# Using Pythagoras Theorem to approximation lenght of path 
+def path_distance(node1: Node, node2: Node):
+    return math.sqrt((node2.x - node1.x)**2 + (node2.y - node1.y)**2)
+
+
+# For each node, point all its connections to itself via an adjacency list
+# Do so breadth-first, starting from the destination
 def populate_adj(nodes_data: dict, destination: int):
-    
-    adj_list = {key: None for key in nodes_data}
 
-    print(adj_list)
-    
-    to_search = [destination]
-    full_nodes = set()
-    while len(full_nodes) < len(adj_list):
-        next_search = []
+    adjacency_list = {key: None for key in nodes_data}
+
+    # Start search at destination
+    to_search = (destination,)
+    visited = set()
+    # Until we have processed all nodes
+    while len(visited) < len(adjacency_list):
+        search_next_loop = []
         for search_node in to_search:
-            print("Search: " + str(search_node))
-            for connected in nodes_data[search_node].adjacent:
-                if connected in full_nodes: continue
-                print("  Connected: " + str(connected))
+            # For all nodes connected to our search node
+            for adjacent_node in nodes_data[search_node].adjacent:
+                # Visited nodes already point in correct direction
+                if adjacent_node in visited: continue
 
-                # Following not needed as graph is tree
-                #if adj_list[connected] == None:
-                adj_list[connected] = LinkedList(search_node, None)
-                """else:
-                    cur_node = adj_list[connected]
-                    while cur_node.next != None: cur_node = cur_node.next
-                    cur_node.next = LinkedList(search_node, None)"""
-                next_search.append(connected)
-            full_nodes.add(search_node)
-        to_search = list(next_search)
+                # Link the adjacent back to current node
+                adjacency_list[adjacent_node] = Edge(search_node, path_distance(nodes_data[adjacent_node], nodes_data[search_node]))
+                search_next_loop.append(adjacent_node)
+            visited.add(search_node)
+        # Search all adjacent nodes during current loop next 
+        to_search = tuple(search_next_loop)
 
-        print(full_nodes)
-        #for key in adj_list: print(str(key) + ": " + str(adj_list[key]))
-        #print(input("pause"))
     # Sanity tests
-    print(adj_list[32].node)
-    print(adj_list[54].node)
-    print(adj_list[42].node)
+    #print(adjacency_list[32].node)
+    #print(adjacency_list[54].node)
+    #print(adjacency_list[42].node)
 
-    cur_node = 32
-    print_path = str(cur_node)
-    while cur_node != destination:
-        cur_node = adj_list[cur_node].node
-        print_path += " -> " + str(cur_node)
-    print(print_path)
+    return adjacency_list
+
+# Print out a traversal of the graph
+def PrintTraversal(adjacency_list: dict, start_node: int):
+    cur_node = adjacency_list[start_node]
+    full_path = str(start_node)
+    # Traverse graph from start node until no adjacent
+    while cur_node:
+        full_path += " --> " + str(cur_node.node)
+        #full_path += " =(" +  str(round(cur_node.weight, 1)) + ")=> " + str(cur_node.node)
+        cur_node = adjacency_list[cur_node.node]
     
+    print(full_path)
 
 
 
-
-
-
-
-populate_adj(nodes_data, 1)
+PrintTraversal(populate_adj(nodes_data, 1), 6)
