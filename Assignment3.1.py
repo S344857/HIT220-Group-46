@@ -1,9 +1,10 @@
 #Part 1- Creating dictionary with nodes
 
 class Node:
-    def __init__(self, x, y, adjacent):
+    def __init__(self, x, y, type, adjacent):
         self.x = x
         self.y = y
+        self.type = type
         self.adjacent = adjacent
 
 # Creating the dictionary with nodes
@@ -74,3 +75,14 @@ print(nodes_data[1].x)
 print(nodes_data[2].y)
 print(nodes_data[33].type)
 print(nodes_data[44].adjacent)
+
+# Finding Distance between nodes
+import math
+
+# Nodes to calculate the distance between
+node1 = nodes_data[1]
+node2 = nodes_data[42]
+
+# Using Pythagoras Theorem to calculate the distance between the 2 nodes
+distance = math.sqrt((node2.x - node1.x)**2 + (node2.y - node1.y)**2)
+print("Distance between nodes 1 and 42:", distance)
