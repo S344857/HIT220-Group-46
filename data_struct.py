@@ -195,7 +195,7 @@ class Graph:
         return None
 
     # Method to print the adjacency list representation of the graph
-    def print(self):
+    def print_adjacency_list(self):
         # Iterating over the Adjacency List
         for current_list in self.adjacency_list:
             # Assign current node with the head node of each Linked List
@@ -238,4 +238,4 @@ graph = Graph()
 # Populate the graph using the given node data
 graph.populate_graph(nodes_data)
 # Print the adjacency list representation of the graph
-graph.print()
+graph.print_adjacency_list()
