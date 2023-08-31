@@ -101,26 +101,14 @@ class LinkedList:
 
     # insertion method for the linked list
     def insert(self, node):
-        print('insertion start......')
-        print('Creat temp node')
         new_node = node
-        print('condition check...')
         if(self.head):
-            print('if condition.....')
-            print('put head to current')
             current = self.head
-            print('iterating over the adjacency list')
             while(current.next):
-                print(f'currently in {current.node_name}')
-                print('next node to current')
                 current = current.next
-            print('after iteration to last node')
             current.next = new_node
         else:
-            print('Else condition......')
-            print('put new node as head')
             self.head = new_node
-        print('--------------finish method')
 
     # print method for the linked list
     def print_linked_list(self):
@@ -147,15 +135,9 @@ class Graph:
         self.adjacency_list.append(current_list)
 
     def add_edges(self, source, destination):
-        print('getting current list')
         current_list = self.adjacency_list[source]
-        print('got current list')
-        print('getting destination_node')
         destination_node = copy.deepcopy(self.adjacency_list[destination].get_head())
-        print('got destination_node')
-        print('inserting .......')
         current_list.insert(destination_node)
-        print('inserted')
 
     def check_edge(self, source, destination):
         current_list = self.adjacency_list[source]
@@ -175,7 +157,6 @@ class Graph:
         return None
 
     def print(self):
-        print("Start printing ")
         for current_list in self.adjacency_list:
             current_node = current_list.get_head()
             while current_node:
@@ -188,19 +169,13 @@ class Graph:
             self.add_node(node=data_list[index])
            
         
-        # print('Populated the adjacency list')
-        # print('proceeding to add adjacents to the nodes')
         for i in range(len(self.adjacency_list)):
             temp_node = self.adjacency_list[i].get_head()
-            print(f'For node : {temp_node.node_name} => ')
             for j in range(len(temp_node.adjacent)):
                 destination_name = temp_node.adjacent[j]
                 destination_index = self.search_node(destination_name)
-                print(f'Searched and got index => {destination_index}')
                 if destination_index is not None:
-                    print(f'add edge with source : {i} and destionation: {destination_index}')
                     self.add_edges(i, destination_index)
-                    print(f'Edge added from {i} to {destination_index}')
 
 
 graph = Graph()
