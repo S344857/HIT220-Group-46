@@ -35,6 +35,16 @@ class Node:
     # returns a string representation of an object’s state
     def __str__(self) -> str:
         return f'Node_name: {self.node_name} \nLocation: {self.location} \nAdjacent: {self.adjacent} \nNext: {self.next}'
+    
+    # Helper method to return the Class data in Dictionary Format
+    def get_data(self):
+        return {
+            "node_name": self.node_name,
+            "x" : self.location.x,
+            "y": self.location.y,
+            "type" :  self.location.type,
+            "adjacent": self.adjacent
+        }
 
 
 # Class for a linked list of nodes
@@ -99,9 +109,10 @@ class Graph:
     def add_edges(self, source, destination):
         # Get the source linked list
         current_list = self.adjacency_list[source]
-        # Deep copy the destination node and insert it into the source linked list
-        # deep copy is used to prevent the usage of same reference node objects and creating a infinite traversal bug
-        destination_node = copy.deepcopy(self.adjacency_list[destination].get_head())
+        # get the destination node data in dictionary format
+        destination_node_data = self.adjacency_list[destination].get_head().get_data()
+        # create a new node with the destination node data
+        destination_node = Node(destination_node_data["node_name"],destination_node_data["x"],destination_node_data["y"],destination_node_data["type"],destination_node_data["adjacent"])
         # insert the edge end node to the adjacency list
         current_list.insert(destination_node)
 
@@ -179,7 +190,7 @@ class Util:
     def parse_csv(self):
         data_list = {}
         # Reading the data from data.csv
-        with open('data.csv', mode='r', newline='') as file:
+        with open(CSV_FILE, mode='r', newline='') as file:
             reader = csv.DictReader(file)
 
             for row in reader:
@@ -188,7 +199,6 @@ class Util:
                 y = int(row["y_coord"])
                 node_type = row["type_of_node"]
                 adjacent_points = [int(point) for point in row["adjacent"].split('_')] # Using split() to read adjacent row
-                print(node_id, x, y, node_type, adjacent_points)
                 data_list[node_id] = Node(node_id, x, y, node_type, adjacent_points)
         return data_list
                 
