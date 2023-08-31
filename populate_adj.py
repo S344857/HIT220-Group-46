@@ -13,18 +13,25 @@ class Node:
 # node: (x, y, type, list of adjacent nodes)
 nodes_data = {}
 
+# method ot parse CSV into Node objects
 def parse_csv(file_name):
+    # empty Dictionary to store nodes
     data_list = {}
     # Reading the data from data.csv
     with open(file_name, mode='r', newline='') as file:
+        # get dictionary reader 
         reader = csv.DictReader(file)
+        # iterating over each row of data
         for row in reader:
+            # assigning CSV data to temporary varaibles
             node_id = int(row["index"])
             x = int(row["x_coord"])
             y = int(row["y_coord"])
             node_type = row["type_of_node"]
             adjacent_points = [int(point) for point in row["adjacent"].split('_')] # Using split() to read adjacent row
+            # add Node object with data to data_list
             data_list[node_id] = Node(x, y, node_type, adjacent_points)
+    # return the list
     return data_list
 
 # Stores data about a node's edge
