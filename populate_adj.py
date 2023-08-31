@@ -91,6 +91,7 @@ def populate_adj(nodes_data: dict, destination: int):
     # Start search at destination
     to_search = (destination,)
     visited = set()
+    
     # Until we have processed all nodes
     while len(visited) < len(adjacency_list):
         search_next_loop = []

@@ -1,3 +1,5 @@
+import copy
+
 # class for node
 class Location:
     def __init__(self, x, y, type):
@@ -8,8 +10,8 @@ class Location:
         # type of node
         self.type = type
     
-    def print_data(self):
-        print("X:", str(self.x), "Y:",str(self.y),"Type", str(self.type))
+    def __str__(self):
+        return "X: "+ str(self.x), "\nY: "+str(self.y),"\nType: " + str(self.type)
 
 
 class Node:
@@ -22,6 +24,9 @@ class Node:
         self.adjacent = adjacent
         # reference to the next node
         self.next = None
+    
+    def __str__(self) -> str:
+        return f'Node_name: {self.node_name} \nLocation: {self.location} \nAdjacent: {self.adjacent} \nNext: {self.next}'
 
 
 # data for coordinate of nodes
@@ -96,20 +101,32 @@ class LinkedList:
 
     # insertion method for the linked list
     def insert(self, node):
-      new_node = node
-      if(self.head):
-        current = self.head
-        while(current.next):
-          current = current.next
-        current.next = new_node
-      else:
-        self.head = new_node
+        print('insertion start......')
+        print('Creat temp node')
+        new_node = node
+        print('condition check...')
+        if(self.head):
+            print('if condition.....')
+            print('put head to current')
+            current = self.head
+            print('iterating over the adjacency list')
+            while(current.next):
+                print(f'currently in {current.node_name}')
+                print('next node to current')
+                current = current.next
+            print('after iteration to last node')
+            current.next = new_node
+        else:
+            print('Else condition......')
+            print('put new node as head')
+            self.head = new_node
+        print('--------------finish method')
 
     # print method for the linked list
     def print_linked_list(self):
       current = self.head
       while(current):
-        print(current.node_name)
+        print(current.node_name + '-> ')
         current = current.next
 
     def get_head(self):
@@ -134,7 +151,7 @@ class Graph:
         current_list = self.adjacency_list[source]
         print('got current list')
         print('getting destination_node')
-        destination_node = self.adjacency_list[destination].get_head()
+        destination_node = copy.deepcopy(self.adjacency_list[destination].get_head())
         print('got destination_node')
         print('inserting .......')
         current_list.insert(destination_node)
@@ -169,9 +186,10 @@ class Graph:
     def populate_graph(self, data_list):
         for index in data_list:
             self.add_node(node=data_list[index])
+           
         
-        print('Populated the adjacency list')
-        print('proceeding to add adjacents to the nodes')
+        # print('Populated the adjacency list')
+        # print('proceeding to add adjacents to the nodes')
         for i in range(len(self.adjacency_list)):
             temp_node = self.adjacency_list[i].get_head()
             print(f'For node : {temp_node.node_name} => ')
