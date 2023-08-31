@@ -1,4 +1,3 @@
-import copy
 import csv
 
 CSV_FILE = "data.csv"
