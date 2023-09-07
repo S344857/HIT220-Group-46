@@ -25,15 +25,15 @@ class Location:
 
 # Define a class for a single node in the linked list
 class Node:
-    def __init__(self, node_name, x, y, type, adjacent):
+    def __init__(self, node_name, x, y, type, adjacent, distance=None, flow_rate=None):
         # Initialize number to present the node
         self.node_name = node_name
         # Create a Location object with given coordinates and type
         self.location = Location(x=x, y=y, type=type)
         # Initialize a list of indeces for adjacent nodes
         self.adjacent = adjacent
-        self.weight = None
-        self.flow_rate = None
+        self.distance = distance
+        self.flow_rate = flow_rate
         # Initialize reference to the next node (linked list pointer)
         self.next = None
 
@@ -114,15 +114,29 @@ class Graph:
     def add_edges(self, source, destination):
         # Get the source linked list
         current_list = self.adjacency_list[source]
+
+        # get source node head
+        current_head_node = current_list.get_head()
+
+        # get destination node head
+        destination_node_head = self.adjacency_list[destination].get_head()
+
         # get the destination node data in dictionary format
-        destination_node_data = self.adjacency_list[destination].get_head().get_data()
+        destination_node_data = destination_node_head.get_data()
+
+        # get the distance between the source and destination nodes
+        distance = self.path_distance(current_head_node, destination_node_head)
+
+        # calculate distance between the destination node and the head node in the lined lislt
+
         # create a new node with the destination node data
         destination_node = Node(
-            destination_node_data["node_name"],
-            destination_node_data["x"],
-            destination_node_data["y"],
-            destination_node_data["type"],
-            destination_node_data["adjacent"],
+            node_name=destination_node_data["node_name"],
+            x=destination_node_data["x"],
+            y=destination_node_data["y"],
+            type=destination_node_data["type"],
+            adjacent=destination_node_data["adjacent"],
+            distance=distance,
         )
         # insert the edge end node to the adjacency list
         current_list.insert(destination_node)
@@ -197,11 +211,13 @@ class Graph:
                     # add the edge from the current node to the destination node
                     self.add_edges(i, destination_index)
 
-    # Using Pythagoras Theorem to approximation lenght of path
+    # function using Pythagoras Theorem to approximation lenght of path
     def path_distance(self, node_one: Node, node_two: Node):
         return math.sqrt(
-            (node_two.x - node_one.x) ** 2 + (node_two.y - node_one.y) ** 2
+            (node_two.location.x - node_one.location.x) ** 2
+            + (node_two.location.y - node_one.location.y) ** 2
         )
+
 
 # Class containing helper functions
 class Util:
@@ -222,8 +238,8 @@ class Util:
                 node_type = row["type"]
                 # put value None if the linked node is 0 and we assume that the Node 0 means no next adjacent node
                 linked = None if int(row["linked"]) == 0 else int(row["linked"])
-                
-                # if the node already exists 
+
+                # if the node already exists
                 if data_list.get(node_id) is not None:
                     # add the linked node to the adjacent node list
                     data_list[node_id].adjacent.append(linked)
