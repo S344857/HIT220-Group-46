@@ -1,10 +1,12 @@
 import csv
+import math
 
 CSV_FILE = "data.csv"
 
 # data for coordinate of nodes
 # format => index : Node(node_name, x_coord, y_coord, type_of_node, tuple(adjacenct_vertex_indeces)
 nodes_data = {}
+
 
 # Define a class for the location of a node
 class Location:
@@ -15,9 +17,11 @@ class Location:
         self.y = y
         # Initialize type of node
         self.type = type
+
     # returns a string representation of an object’s state
     def __str__(self):
-        return "X: "+ str(self.x), "\nY: "+str(self.y),"\nType: " + str(self.type)
+        return f"X: {str(self.x)},\nY: {str(self.y)},\nType: { str(self.type)}"
+
 
 # Define a class for a single node in the linked list
 class Node:
@@ -28,28 +32,30 @@ class Node:
         self.location = Location(x=x, y=y, type=type)
         # Initialize a list of indeces for adjacent nodes
         self.adjacent = adjacent
+        self.weight = None
+        self.flow_rate = None
         # Initialize reference to the next node (linked list pointer)
         self.next = None
-        
+
     # returns a string representation of an object’s state
     def __str__(self) -> str:
-        return f'Node_name: {self.node_name} \nLocation: {self.location} \nAdjacent: {self.adjacent} \nNext: {self.next}'
-    
+        return f"Node_name: {self.node_name} \nLocation: {self.location} \nAdjacent: {self.adjacent} \nNext: {self.next}"
+
     # Helper method to return the Class data in Dictionary Format
     def get_data(self):
         return {
             "node_name": self.node_name,
-            "x" : self.location.x,
+            "x": self.location.x,
             "y": self.location.y,
-            "type" :  self.location.type,
-            "adjacent": self.adjacent
+            "type": self.location.type,
+            "adjacent": self.adjacent,
         }
 
 
 # Class for a linked list of nodes
 class LinkedList:
     def __init__(self):
-        # Initialize the head of the linked list  
+        # Initialize the head of the linked list
         self.head = None
 
     # Method to insert a node at the end of the linked list
@@ -57,11 +63,11 @@ class LinkedList:
         # Create a new_node with the given node
         new_node = node
         # If the linked list is not empty
-        if(self.head):
-            # Initially assign the head value to current node 
+        if self.head:
+            # Initially assign the head value to current node
             current = self.head
             # Traverse to the end of the linked list
-            while(current.next):
+            while current.next:
                 # Traverse to the next node until 'None' is encountered
                 current = current.next
             # Add the new node to the end
@@ -72,21 +78,21 @@ class LinkedList:
 
     # Method to print the linked list
     def print_linked_list(self):
-        # Initially assign the head value to current node 
+        # Initially assign the head value to current node
         current = self.head
         # Traverse and print each node in the linked list
-        while(current):
-          print(current.node_name + '-> ')
-          current = current.next
+        while current:
+            print(current.node_name + "-> ")
+            current = current.next
 
     # Method to get the head node of the linked list
     def get_head(self):
         # Return the head node if it exists
-        if(self.head):
+        if self.head:
             return self.head
         # Else raise an error
         else:
-            raise ValueError('The value of head is `None`')
+            raise ValueError("The value of head is `None`")
 
 
 # Class representing a graph
@@ -111,7 +117,13 @@ class Graph:
         # get the destination node data in dictionary format
         destination_node_data = self.adjacency_list[destination].get_head().get_data()
         # create a new node with the destination node data
-        destination_node = Node(destination_node_data["node_name"],destination_node_data["x"],destination_node_data["y"],destination_node_data["type"],destination_node_data["adjacent"])
+        destination_node = Node(
+            destination_node_data["node_name"],
+            destination_node_data["x"],
+            destination_node_data["y"],
+            destination_node_data["type"],
+            destination_node_data["adjacent"],
+        )
         # insert the edge end node to the adjacency list
         current_list.insert(destination_node)
 
@@ -155,7 +167,7 @@ class Graph:
             # Iterating as long as None is not encountered
             while current_node:
                 # Print the current node_name / index / code
-                print(f'{current_node.node_name} -> ', end="")
+                print(f"{current_node.node_name} -> ", end="")
                 # reference to the next node in the Linked List
                 current_node = current_node.next
             # Print to denote the end of the Linked List
@@ -168,9 +180,9 @@ class Graph:
         for index in data_list:
             # Add node to Graph
             self.add_node(node=data_list[index])
-           
-         # Add edges to the graph based on the adjacent vertices
-         # Iterating over the adjacent of each of the Head node of the Linked Lists
+
+        # Add edges to the graph based on the adjacent vertices
+        # Iterating over the adjacent of each of the Head node of the Linked Lists
         for i in range(len(self.adjacency_list)):
             # Assign the head node to a temporary varaible
             temp_node = self.adjacency_list[i].get_head()
@@ -185,11 +197,18 @@ class Graph:
                     # add the edge from the current node to the destination node
                     self.add_edges(i, destination_index)
 
+    # Using Pythagoras Theorem to approximation lenght of path
+    def path_distance(self, node_one: Node, node_two: Node):
+        return math.sqrt(
+            (node_two.x - node_one.x) ** 2 + (node_two.y - node_one.y) ** 2
+        )
+
+
 class Util:
     def parse_csv(self):
         data_list = {}
         # Reading the data from data.csv
-        with open(CSV_FILE, mode='r', newline='') as file:
+        with open(CSV_FILE, mode="r", newline="") as file:
             reader = csv.DictReader(file)
 
             for row in reader:
@@ -197,10 +216,12 @@ class Util:
                 x = int(row["x_coord"])
                 y = int(row["y_coord"])
                 node_type = row["type_of_node"]
-                adjacent_points = [int(point) for point in row["adjacent"].split('_')] # Using split() to read adjacent row
+                adjacent_points = [
+                    int(point) for point in row["adjacent"].split("_")
+                ]  # Using split() to read adjacent row
                 data_list[node_id] = Node(node_id, x, y, node_type, adjacent_points)
         return data_list
-                
+
 
 # Instantiate the Util class
 util = Util()
