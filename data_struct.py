@@ -1,7 +1,7 @@
 import csv
 import math
 
-CSV_FILE = "data.csv"
+CSV_FILE = "water_data.csv"
 
 # data for coordinate of nodes
 # format => index : Node(node_name, x_coord, y_coord, type_of_node, tuple(adjacenct_vertex_indeces)
@@ -212,14 +212,16 @@ class Util:
             reader = csv.DictReader(file)
 
             for row in reader:
-                node_id = int(row["index"])
-                x = int(row["x_coord"])
-                y = int(row["y_coord"])
-                node_type = row["type_of_node"]
-                adjacent_points = [
-                    int(point) for point in row["adjacent"].split("_")
-                ]  # Using split() to read adjacent row
-                data_list[node_id] = Node(node_id, x, y, node_type, adjacent_points)
+                node_id = int(row["Node"])
+                x = int(row["x"])
+                y = int(row["y"])
+                node_type = row["type"]
+                linked = None if int(row["linked"]) == 0 else int(row["linked"])
+                
+                if data_list.get(node_id) is not None:
+                    data_list[node_id].adjacent.append(linked)
+                else:              
+                    data_list[node_id] = Node(node_id, x, y, node_type, [linked])
         return data_list
 
 
