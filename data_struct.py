@@ -203,25 +203,35 @@ class Graph:
             (node_two.x - node_one.x) ** 2 + (node_two.y - node_one.y) ** 2
         )
 
-
+# Class containing helper functions
 class Util:
+    # function to parse the CSV file to Map data type
     def parse_csv(self):
         data_list = {}
         # Reading the data from data.csv
         with open(CSV_FILE, mode="r", newline="") as file:
+            # read the CSV file and assign to variable
             reader = csv.DictReader(file)
 
+            # iterating over each of the CSV line
             for row in reader:
+                # assigning values from file to variables
                 node_id = int(row["Node"])
                 x = int(row["x"])
                 y = int(row["y"])
                 node_type = row["type"]
+                # put value None if the linked node is 0 and we assume that the Node 0 means no next adjacent node
                 linked = None if int(row["linked"]) == 0 else int(row["linked"])
                 
+                # if the node already exists 
                 if data_list.get(node_id) is not None:
+                    # add the linked node to the adjacent node list
                     data_list[node_id].adjacent.append(linked)
-                else:              
+                # if node is not present in the data_list
+                else:
+                    # add the node to the data_list
                     data_list[node_id] = Node(node_id, x, y, node_type, [linked])
+        # return the data_list variable
         return data_list
 
 
