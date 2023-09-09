@@ -10,28 +10,31 @@ nodes_data = {}
 
 # Define a class for the location of a node
 class Location:
-    def __init__(self, x, y, type):
+    def __init__(self, x, y):
         # Initialize x-coordinate
         self.x = x
         # Initialize y-coordinate
         self.y = y
-        # Initialize type of node
-        self.type = type
 
     # returns a string representation of an object’s state
     def __str__(self):
-        return f"X: {str(self.x)},\nY: {str(self.y)},\nType: { str(self.type)}"
+        return f"X: {str(self.x)},\nY: {str(self.y)}"
 
 
 # Define a class for a single node in the linked list
 class Node:
-    def __init__(self, node_name, x, y, type, adjacent, distance=None, flow_rate=None):
+    def __init__(self, node_name, x, y, type, adjacent, incoming_edges=0, distance=None, flow_rate=None):
         # Initialize number to present the node
         self.node_name = node_name
         # Create a Location object with given coordinates and type
-        self.location = Location(x=x, y=y, type=type)
+        self.location = Location(x=x, y=y)
         # Initialize a list of indeces for adjacent nodes
         self.adjacent = adjacent
+        self.type = type
+        # Stores the number of incoming edges
+        self.incoming_edges = incoming_edges
+
+        # Edge data
         self.distance = distance
         self.flow_rate = flow_rate
         # Initialize reference to the next node (linked list pointer)
@@ -39,7 +42,7 @@ class Node:
 
     # returns a string representation of an object’s state
     def __str__(self) -> str:
-        return f"Node_name: {self.node_name} \nLocation: {self.location} \nAdjacent: {self.adjacent} \nNext: {self.next}"
+        return f"Node_name: {self.node_name} \nLocation: {self.location} \nIncoming: {self.incoming_edges} \nAdjacent: {self.adjacent} "
 
     # Helper method to return the Class data in Dictionary Format
     def get_data(self):
@@ -47,8 +50,11 @@ class Node:
             "node_name": self.node_name,
             "x": self.location.x,
             "y": self.location.y,
-            "type": self.location.type,
+            "type": self.type,
+            "incoming_edges": self.incoming_edges,
             "adjacent": self.adjacent,
+            "distance": self.distance,
+            "flow_rate": self.flow_rate
         }
 
 
@@ -102,7 +108,7 @@ class Graph:
         self.adjacency_list = []
 
     # Method to add a node to the graph
-    def add_node(self, node):
+    def add_node(self, node: Node):
         # Create a new linked list and insert the node
         current_list = LinkedList()
         # insert the new node to the linked list
@@ -219,11 +225,62 @@ class Graph:
         )
 
 
+    # Function populates the flow rate of all edges
+    def populate_flow_rate(self):
+        # Used for working out if an edge represents a river
+        river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge"}
+        source_type = "headwater"
+        source_flow = 1     # Assume flow
+        # Store the running sum of incoming flow for each node
+        # Finding income edges, to sum flow, you need to search all vertex+edges
+        node_flow = {}
+
+        print("Populating flow rate...")
+        # Get all source nodes, to start search at
+        search_queue = []
+        for node in graph.adjacency_list:
+            node_flow[node.head.node_name] = 0   # Initialize flow to be zero
+            if node.head.type == source_type:
+                search_queue.append(node.head)
+
+        # Peforms a BFS, starting from source nodes
+        visited = set()
+        while search_queue:
+            print(search_queue[0].node_name)
+            # Iterate over connected nodes
+            connected = search_queue[0].next
+            while connected:
+                # Skip non-river edges and visited nodes
+                if (connected.type not in river_types) or (connected.node_name in visited):
+                    connected = connected.next
+                    continue
+
+                if search_queue[0].type == source_type:
+                    node_flow[connected.node_name] += source_flow
+                    connected.flow_rate = source_flow
+                else:
+                    
+                    connected.flow_rate
+
+                print(" -> " + str(connected.node_name) + " | " + str(connected.flow_rate))
+                #search_queue.append(node.head.node_name)
+                connected = connected.next
+            search_queue.pop(0)
+            
+        
+
+    def sort_flow_rate():
+        pass
+
 # Class containing helper functions
 class Util:
     # function to parse the CSV file to Map data type
     def parse_csv(self):
         data_list = {}
+        # number of incoming edges to a node
+        # Needed as node may not have been added yet
+        incoming_count = {}
+
         # Reading the data from data.csv
         with open(CSV_FILE, mode="r", newline="") as file:
             # read the CSV file and assign to variable
@@ -237,16 +294,38 @@ class Util:
                 y = int(row["y"])
                 node_type = row["type"]
                 # put value None if the linked node is 0 and we assume that the Node 0 means no next adjacent node
-                linked = None if int(row["linked"]) == 0 else int(row["linked"])
+                if int(row["linked"]) == 0:
+                    linked = None
+                else:
+                    linked = int(row["linked"])
+                    # Since there is a linked node, add to its running count
+                    # Initialise, if not done so already
+                    if not(incoming_count.get(linked)): incoming_count[linked] = 0
+                    incoming_count[linked] += 1     # Add to running count
+
+                # if connected node already exists
+                if data_list.get(linked) is not None:
+                    # set the incoming node count to current running count
+                    data_list[linked].incoming_edges = incoming_count[linked]
 
                 # if the node already exists
                 if data_list.get(node_id) is not None:
                     # add the linked node to the adjacent node list
                     data_list[node_id].adjacent.append(linked)
+
+                    # add running count of incoming nodes
+                    # Initialise count, if not done so already
+                    if not(incoming_count.get(node_id)):
+                        incoming_count[node_id] = 0
+                    data_list[node_id].incoming_edges = incoming_count[node_id]
+                
                 # if node is not present in the data_list
                 else:
                     # add the node to the data_list
                     data_list[node_id] = Node(node_id, x, y, node_type, [linked])
+        
+        #for line in incoming_count:
+        #    print(str(line)+": "+str(incoming_count[line]))
         # return the data_list variable
         return data_list
 
@@ -259,5 +338,30 @@ nodes_data = util.parse_csv()
 graph = Graph()
 # Populate the graph using the given node data
 graph.populate_graph(nodes_data)
+#for node_id in nodes_data: print(str(nodes_data[node_id]) + "\n")
+
+
+graph.adjacency_list[1].head.node_name = 999
 # Print the adjacency list representation of the graph
 graph.print_adjacency_list()
+
+
+
+#print(graph.adjacency_list[2].head.next)
+#graph.populate_flow_rate()
+
+
+
+"""
+river_types = {"Katherine", "junction", "headwater", "Daley River"}
+for entry in graph.adjacency_list:
+    if entry.head.type != "headwater": continue
+    node = entry.head
+    print(str(entry.head.node_name))
+    while node.next:
+        print(
+            "   ("+ str(entry.head.type)  + ") -> "
+            + str(node.next.node_name) +" ("+ str(node.next.type) + ")"
+            )
+        node = node.next
+"""
