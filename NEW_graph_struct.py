@@ -59,15 +59,15 @@ class Graph:
         tail_edge.next = edge_to_add
 
     def check_edge(self, source_id: int, destination_id: int):
-        # If source node exists
+        # If source node doesn't exist
         if not(self.adjacency_list.get(source_id)):
             return False
         
-        # Search all edges connected to our source 
+        # Search all edges connected to our source
         for connected_edge in LL_as_array(self.adjacency_list[source_id])[1:]:
             if connected_edge.node == destination_id:
                 return True
-        # If prevous steps couldn't find, it isn't connected 
+        # If couldn't find it, it isn't connected 
         return False
     
     def print_adjacency_list(self):
@@ -78,7 +78,7 @@ class Graph:
             for edge in LL_as_array(self.adjacency_list[node])[1:]:
                 # Add to path
                 linked_path += " -> " + str(edge.node)
-            # Print the full path, ending when next points to null
+            # Print the full path, ending when pointing to null
             print(linked_path + " -> None")
 
     def populate_distance(self):
@@ -154,13 +154,13 @@ def parse_csv_into_adjacency_list(graph: Graph):
                 if linked: graph.add_edge(node_id, Edge(linked))
 
 
-# Returns all steps of in a LinkedList as an array
+# Returns all steps in a LinkedList as an array
 def LL_as_array(LinkedList):
     if not hasattr(LinkedList, 'next'):
         raise TypeError("Input isn't a LinkedList")
         
     LL_as_array = []            # Array to all steps
-    # Step down LinkedList until reaching empty 
+    # Step down LinkedList until pointing towards nothing
     cur_node = LinkedList
     while cur_node:
         LL_as_array.append(cur_node)    # Add each step to list
