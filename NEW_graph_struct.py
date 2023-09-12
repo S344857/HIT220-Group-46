@@ -41,6 +41,7 @@ class Graph:
         # If node has already been added
         if self.adjacency_list.get(node_data["node_id"]):
             print("Error: Node is already in graph")
+            print(node_data)
             return
         
         # Add a Vertex class object to adjacency list, with the key being the node's ID
@@ -59,7 +60,7 @@ class Graph:
 
     # Returns the vertex data, easier than keying the adj. list
     def data(self, node_id: int):
-        return self.adjacency_list[node_id]
+        return self.adjacency_list.get(node_id)
 
     def check_edge(self, source_id: int, destination_id: int):
         # If source node doesn't exist
@@ -72,6 +73,16 @@ class Graph:
                 return True
         # If couldn't find it, it isn't connected 
         return False
+    
+    # Returns all vertices within a given region
+    def vertices_in_region(self, x_min: int, x_max: int, y_min: int, y_max: int):
+        in_region = []      # All nodes found within region
+        for node in self.adjacency_list:
+            if (self.data(node).x >= x_min and self.data(node).x <= x_max) and (
+                self.data(node).y >= y_min and self.data(node).y <= y_max):
+                in_region.append(node)
+        
+        return in_region
     
     def print_adjacency_list(self):
         # Iterate over all nodes
@@ -101,22 +112,24 @@ class Graph:
     def populate_flow_rate(self):
         # Used for working out if an edge represents a river
         river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge"}
-        source_type = "headwater"
+        source_type = "headwater"   # Start BFS at this type
         source_flow = 1     # Assume flow
+
         # Some paths connect two 'river nodes' but are not rivers
         # so they are manually black listed
         black_list_path = set([ (50,33), (33,50) ])
-
 
         # Find the number of incoming rivers for every water node
         # and add all source nodes into the search queue for later
         search_queue = []
         incoming_rivers = {}    # Count of incoming river edges
+        incoming_flow = {}      # Running sum of incoming flow to a node
         for node in self.adjacency_list:
             # Ignore non-rivers
             if self.data(node).type not in river_types: continue
             # Add source nodes to start BFS at later
             if self.data(node).type == source_type:
+                incoming_flow[node] = source_flow
                 search_queue.append(node)
 
             # Iterate over all node's edges
@@ -134,25 +147,31 @@ class Graph:
         for key in incoming_rivers: print(str(key)+": "+str(incoming_rivers[key]) + str(self.data(key).type))
         #print(search_queue)
         
-
+        # Breadth-first-search all edges, starting at source nodes
+        # Only search add node to queue if all incoming edges already searched
         while search_queue:
             search_next = []    # Queue for next search
             print(search_queue)
             for search_node in search_queue:
-                #print("#" + str(search_node))
                 for edge in LL_as_array(self.data(search_node))[1:]:
-                    # Skip non-rivers and source types (river can't flow towards a source)
+                    # Skip non-rivers
                     if (self.data(edge.node).type not in river_types): continue
                     # Rivers can't flow towards a source
                     if (self.data(edge.node).type == source_type) and (
-                        self.data(edge.node).next != None ):    # But not the destination
+                        self.data(edge.node).next != None ):    # But can to the destination
                         continue
-                    # If search_node -> edge_node is blacklisted, skip ut
-                    if (search_node, edge.node) in black_list_path:
-                        continue
+                    # Skip blacklisted paths
+                    if (search_node, edge.node) in black_list_path: continue
 
                     # Added flow of one edge
-                    print(str(search_node) + " -> " + str(edge.node) + " | " + str(incoming_rivers[edge.node]))
+                    edge.flow_rate = incoming_flow[search_node]
+                    # Initialize edge's running count, if not done so
+                    if not(incoming_flow.get(edge.node)):
+                        incoming_flow[edge.node] = 0
+                    # Add edges flow to nodes running sum of flow
+                    incoming_flow[edge.node] += edge.flow_rate
+
+                    print(str(search_node) + " =("+str(edge.flow_rate)+")=> " + str(edge.node) + " | " + str(incoming_rivers[edge.node]))
                     # Since we visited it, remove it
                     incoming_rivers[edge.node].remove(search_node)
                     # Search it next, if we visted all incoming nodes
@@ -163,6 +182,14 @@ class Graph:
             print(search_next)
             print(input(""))
             search_queue = search_next
+    
+    def HighestFlowRate(self, x_min=0, x_max=700, y_min=0, y_max=700):
+        # Dictionary of all verticie's flow rate withn a given range
+        verticies_dict = {}
+        for node in self.vertices_in_region(x_min, x_max, y_min, y_max):
+            verticies_dict[node] = self.data(node).flow_rate
+
+        return
         
         
 
@@ -173,26 +200,23 @@ def parse_csv_into_adjacency_list(graph: Graph):
         with open(CSV_FILE, mode="r", newline="") as file:
             # read the CSV file and assign to variable
             reader = csv.DictReader(file)
-
             # iterating over each CSV line
             for row in reader:
-                # assigning values from file to variables
+                # Get nodes id from file
                 node_id =   int(row["Node"])
-                x =         int(row["x"])
-                y =         int(row["y"])
-                node_type = row["type"]
                 # put value None if the linked node is 0 and we assume that the Node 0 means no next adjacent node
                 linked = None if int(row["linked"]) == 0 else int(row["linked"])
 
-                # Create dictionary of the node's data
+                # Create dictionary of data from values in file
                 vertex_dict = {
-                    "node_id": node_id,
-                    "x": x,
-                    "y": y,
-                    "type": node_type
+                    "node_id":  node_id,
+                    "x":        int(row["x"]),
+                    "y":        int(row["y"]),
+                    "type":     row["type"]
                 }
-                # Add node, by passing dictionary
-                graph.add_node(vertex_dict)
+                # Add node if not in graph already, by passing dictionary
+                if not(graph.data(node_id)):
+                    graph.add_node(vertex_dict)
                 # add the linked node to the adjacent node
                 if linked: graph.add_edge(node_id, Edge(linked))
 
@@ -220,8 +244,12 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 #graph.populate_flow_rate()
 
+region = graph.vertices_in_region(0,160, 0,600)
+print(region)
+
+
 # Print the adjacency list representation of the graph
-#graph.print_adjacency_list()
+graph.print_adjacency_list()
 
 # Print the vertex data stored in the adjacency list
 #for key in graph.adjacency_list: print(str(key)+"| \n"+str(graph.adjacency_list[key].next))
