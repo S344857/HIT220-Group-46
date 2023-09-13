@@ -1,3 +1,18 @@
+    # ------------------------------------------------------------------------------------
+    # ASSUMPTIONS
+    # ------------------------------------------------------------------------------------
+    # 1. Node number 1 is the destination node where all water flows towards: 
+    #       - Reason for assumption: Node 1 is placed in the Timor Sea which is the largest notable near-by body of water.
+    #       - Rivers in-land are typically at a higher elevation than sea-level and flow toward a lower elevation.
+    # 2. The map we have can be represented with a directed tree; all nodes are connected by exactly one path.
+    #       - This is necessary, as if there exist multiple paths between two nodes, the direction of all edges may not be determinable based on the data we have.
+    #       - This assumption holds true for our map.
+    # 3. The range x and y coordinates can only be between the value of 0 to 650, inclusively.
+    #       - This assumption holds true in accordance to the provided map.
+    # 4. Dam can only be placed in junction node.
+    #       - We assume that the junction resets the flow rate but still maintains the flow rate, thus it resets to 1.
+    #       - Assuming only one 
+    # ------------------------------------------------------------------------------------
 import math     # For calculating distance 
 import csv
 
@@ -19,7 +34,7 @@ class Edge:
         self.next = None
 
     def __str__(self):
-        return f"Node: {str(self.node)},\nWeight: {str(self.weight)}, \nFlow_rate: {str(self.flow_rate)}, \nNext: {str(self.next)}\n"
+        return f"\nNode: {str(self.node)},\nWeight: {str(self.weight)}, \nFlow_rate: {str(self.flow_rate)}, \nNext: {str(self.next)}\n"
 
 # Stores data about a node/vertex in the graph
 # Node ID is not stored here as it will be the key of the adjacency list
@@ -32,7 +47,7 @@ class Vertex:
         self.next = None
 
     def __str__(self):
-        return f"X: {str(self.x)},\nY: {str(self.y)}, \nType: {str(self.type)}\n"
+        return f"\nX: {str(self.x)},\nY: {str(self.y)}, \nType: {str(self.type)}\n"
 
 
 class Graph:
@@ -56,7 +71,7 @@ class Graph:
     def add_edge(self, source_id: int, edge_to_add: Edge):
         # If source node doesn't exist
         if self.adjacency_list.get(source_id) is None:
-            raise KeyError("Source Node '" + str(source_id) + "' isn't in the graph")
+            raise KeyError("\nSource Node '" + str(source_id) + "' isn't in the graph")
         
         # Get the end of the source id's LinkedList
         tail_edge = LL_as_array(self.data(source_id))[-1]
@@ -184,7 +199,7 @@ class Graph:
                 # Since we visited it, remove it
                 incoming_rivers[edge.node] -= 1
 
-                #print(str(search_node) + " =("+str(edge.flow_rate)+")=> " + str(edge.node))
+                # print(str(search_node) + " =("+str(edge.flow_rate)+")=> " + str(edge.node))
 
                 # Search it next, if we visted all incoming nodes
                 if incoming_rivers[edge.node] == 0:
@@ -213,7 +228,44 @@ class Graph:
         #print(verticies_dict)
         # Return sorted in reverse order (highest to lowest)
         return MergedSort_Dict(verticies_dict)[::-1]
-        
+    
+    def traverse_to_node1(self, source_node_id):
+        # Create an empty list to store the traversed nodes
+        traversed_nodes = []
+
+        # Check if the source node exists in the graph
+        if source_node_id not in self.adjacency_list:
+            print("Source node not found in the graph.")
+            return traversed_nodes
+
+        # Initialize a queue for BFS traversal
+        queue = [(source_node_id, [source_node_id])]  # Each item in the queue is a tuple (node, path)
+
+        # Create a set to track visited nodes
+        visited = set()
+
+        # Perform BFS traversal
+        while queue:
+            current_node, path = queue.pop(0)
+            print(f'Current node: {current_node} => Path: {path}')
+            visited.add(current_node)
+
+            # Check if node 1 is reached
+            if current_node == 1:
+                traversed_nodes = path
+                break
+
+            # Add unvisited neighboring nodes to the queue
+            for edge in LL_as_array(self.data(current_node))[1:]:
+                print(f'\n    Edge:{edge}')
+                neighbor_node = edge.node
+                if neighbor_node not in visited:
+                    new_path = path + [neighbor_node]
+                    queue.append((neighbor_node, new_path))
+
+        if not traversed_nodes:
+            print("Node 1 is not reachable from the source node.")
+        return traversed_nodes    
         
 
 
@@ -299,6 +351,11 @@ def MergedSort_Dict(dictionary: dict):
     # List of keys, ordered by their values
     return tuple(keys)
 
+def validate_coordinate(x_coord, y_coord):
+    x_flag = True if x_coord >= 0 and x_coord <= 650 else False and isinstance()
+    y_flag = True if y_coord >= 0 and y_coord <= 650 else False
+    return x_flag and y_flag
+
 
 # Create a Graph object
 graph = Graph()
@@ -310,7 +367,7 @@ graph.populate_distance()
 graph.populate_flow_rate()
 
 # Print a list of junctions, from highest to smallest flow rate in region
-print(graph.junction_sort( (0,0), (300,300) ))
+# print(graph.junction_sort( (0,0), (300,300) ))
 
 
 # Print the adjacency list representation of the graph
@@ -321,3 +378,61 @@ print(graph.junction_sort( (0,0), (300,300) ))
 
 # Check if an edge exists between two nodes
 #print(graph.check_edge(61,19))
+
+# userchoice = 1
+# while userchoice != 0:
+#     userchoice = input("Input betwwen 1 to 4 run the question progream or Input 0 to terminate: ")
+    
+#     # ------------------------------------------------------------------------------------
+#     # QUESTION NUMBER 1
+#     # ------------------------------------------------------------------------------------
+#     if int(userchoice) == 1:
+#         top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: \nEnter Data:")
+#         bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: \nEnter Data:")
+        
+#         temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
+#         temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
+        
+        
+#         if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
+#             top_left_coord = (temp_value_x[0], temp_value_x[1])
+#             bottom_right_coord = (temp_value_y[0], temp_value_y[1])
+#         else:
+#             print("Coordinate range out of bound. Try Again.")
+#             continue
+#         print(graph.junction_sort( (0,0), (300,300) ))
+        
+        
+        
+    
+    
+#     # ------------------------------------------------------------------------------------
+#     # QUESTION NUMBER 2
+#     # ------------------------------------------------------------------------------------
+#     elif int(userchoice) == 2:
+#         pass
+    
+    
+#     # ------------------------------------------------------------------------------------
+#     # QUESTION NUMBER 3
+#     # ------------------------------------------------------------------------------------
+#     elif int(userchoice) == 3:
+#         pass
+    
+#     # ------------------------------------------------------------------------------------
+#     # QUESTION NUMBER 4
+#     # ------------------------------------------------------------------------------------
+#     elif int(userchoice) == 4:
+#         pass
+    
+    
+#     # ------------------------------------------------------------------------------------
+#     # PROGRAM TERMINATION
+#     # ------------------------------------------------------------------------------------
+#     else:
+#         break
+
+# source_node_id = 32  
+source_node_id = 50
+traversed_nodes = graph.traverse_to_node1(source_node_id)
+print("Traversed nodes from source to node 1:", traversed_nodes)
