@@ -5,6 +5,7 @@ CSV_FILE = "water_data.csv"
 
 # Used for working out if an edge represents a river
 river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge"}
+
 source_type = "headwater"
 
 
