@@ -126,6 +126,18 @@ class Graph:
 
         # If it didn't fail the prevous test, it must be a river
         return True
+    
+    def is_junction(self, node: int):
+        return self.data(node).type == "junction"
+    
+    def get_junction_list(self):
+        temp_list = []
+        for node in self.adjacency_list:
+            if(self.is_junction(node)):
+                if node not in temp_list:
+                    temp_list.append(node)
+        
+        return temp_list
 
     def print_adjacency_list(self):
         # Iterate over all nodes
@@ -247,7 +259,7 @@ class Graph:
         # Perform BFS traversal
         while queue:
             current_node, path = queue.pop(0)
-            print(f'Current node: {current_node} => Path: {path}')
+            # print(f'Current node: {current_node} => Path: {path}')
             visited.add(current_node)
 
             # Check if node 1 is reached
@@ -257,7 +269,7 @@ class Graph:
 
             # Add unvisited neighboring nodes to the queue
             for edge in LL_as_array(self.data(current_node))[1:]:
-                print(f'\n    Edge:{edge}')
+                # print(f'\n    Edge:{edge}')
                 neighbor_node = edge.node
                 if neighbor_node not in visited:
                     new_path = path + [neighbor_node]
@@ -417,6 +429,7 @@ graph.populate_flow_rate()
 #     # QUESTION NUMBER 3
 #     # ------------------------------------------------------------------------------------
 #     elif int(userchoice) == 3:
+        
 #         pass
     
 #     # ------------------------------------------------------------------------------------
@@ -433,6 +446,14 @@ graph.populate_flow_rate()
 #         break
 
 # source_node_id = 32  
-source_node_id = 50
-traversed_nodes = graph.traverse_to_node1(source_node_id)
-print("Traversed nodes from source to node 1:", traversed_nodes)
+# source_node_id = 50
+# traversed_nodes = graph.traverse_to_node1(source_node_id)
+# print("Traversed nodes from source to node 1:", traversed_nodes)
+# print(f'junction list=>{graph.get_junction_list()}')
+
+junction_list = graph.get_junction_list()
+        
+dam_node = input(f'The following are the list of junction nodes:{junction_list} \nEnter the junction node for damming:')
+if  dam_node not in junction_list or not dam_node.isdigit():
+    raise ValueError("Please enter valid node.")
+print(dam_node)
