@@ -446,14 +446,26 @@ graph.populate_flow_rate()
 #         break
 
 # source_node_id = 32  
-# source_node_id = 50
 # traversed_nodes = graph.traverse_to_node1(source_node_id)
 # print("Traversed nodes from source to node 1:", traversed_nodes)
 # print(f'junction list=>{graph.get_junction_list()}')
 
 junction_list = graph.get_junction_list()
         
-dam_node = input(f'The following are the list of junction nodes:{junction_list} \nEnter the junction node for damming:')
-if  dam_node not in junction_list or not dam_node.isdigit():
+# dam_node = input(f'The following are the list of junction nodes:{junction_list} \nEnter the junction node for damming:')
+dam_node = '42'
+if not dam_node.isdigit():
+    raise ValueError("Please enter input.")
+
+dam_node = int(dam_node)
+
+if dam_node not in junction_list:
     raise ValueError("Please enter valid node.")
-print(dam_node)
+
+traversed_nodes = graph.traverse_to_node1(dam_node)
+for node in traversed_nodes:
+    temp_data = graph.data(node)
+    print(f'node_id: {node} {temp_data}')
+print("Traversed nodes from source to node 1:", traversed_nodes)
+
+
