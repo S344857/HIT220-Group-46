@@ -242,7 +242,8 @@ class Graph:
         return MergedSort_Dict(verticies_dict)[::-1]
     
     # Prints reduction in flow rate at each junction along the river
-    def new_flow(self, junction_to_dam: int):
+    def new_flow(self, dam_x: int, dam_y:int):
+        junction_to_dam = self.find_closest_junction(dam_x,dam_y)
         if not(self.data(junction_to_dam)):
             print("Junction doesn't exist")
             return
@@ -281,6 +282,25 @@ class Graph:
                 # edge.flow_rate -= pre_dam_flow
                 new_flow_rate = edge.flow_rate - pre_dam_flow
                 print(str(river_path[i]) + " (new flow: " + str(new_flow_rate)+")")
+                
+        
+    def find_closest_junction(self, x, y):
+        closest_junction = None
+        closest_distance = float('inf')
+
+        for node_id in self.adjacency_list:
+            node = self.data(node_id)
+
+            # Check if the node is a junction and calculate the distance
+            if node.type == "junction":
+                distance = self.path_distance(Vertex(x, y, ""), node)
+
+                # Update the closest junction if a closer one is found
+                if distance < closest_distance:
+                    closest_distance = distance
+                    closest_junction = node_id
+
+        return closest_junction
                 
     def print_flow_rate(self):
         # Iterate over all nodes
@@ -435,12 +455,12 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-# graph.print_flow_rate()
 print("-----------------------------")
-graph.new_flow(35)
+graph.new_flow(210,170)
 print("-----------------------------")
 
-# graph.print_flow_rate()
+# print(f'Closest Junction: {graph.find_closest_junction(210,170)}')
+
 
 
 # Print a list of junctions, from highest to smallest flow rate in region
