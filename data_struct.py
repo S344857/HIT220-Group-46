@@ -10,8 +10,9 @@
     # 3. The range x and y coordinates can only be between the value of 0 to 650, inclusively.
     #       - This assumption holds true in accordance to the provided map.
     # 4. Dam can only be placed in junction node.
-    #       - We assume that the junction resets the flow rate but still maintains the flow rate, thus it resets to 1.
-    #       - Assuming only one 
+    #       - We assume that the junction resets the flow rate to 0, as dam will at least temporarily block any flow in the river below the dam while it is filling.
+    #       - Assuming only one dam will be placed at a time.
+    #       - We assume that in the funciton `new_flow(dam_x, dam_y)`, which simulates the flow rate of the subiquent nodes flow rate change if a dam is placed before a junciton, takes input of the nearest coordinate to the choosen junction rather then the coordinate for the dam itself.
     # ------------------------------------------------------------------------------------
 import math     # For calculating distance 
 import csv
@@ -441,7 +442,7 @@ def MergedSort_Dict(dictionary: dict):
     return tuple(keys)
 
 def validate_coordinate(x_coord, y_coord):
-    x_flag = True if x_coord >= 0 and x_coord <= 650 else False and isinstance()
+    x_flag = True if x_coord >= 0 and x_coord <= 650 else False
     y_flag = True if y_coord >= 0 and y_coord <= 650 else False
     return x_flag and y_flag
 
@@ -455,107 +456,78 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-print("-----------------------------")
-graph.new_flow(210,170)
-print("-----------------------------")
-
-# print(f'Closest Junction: {graph.find_closest_junction(210,170)}')
-
-
-
-# Print a list of junctions, from highest to smallest flow rate in region
-# print(graph.junction_sort( (0,0), (300,300) ))
-
-
-# Print the adjacency list representation of the graph
-#graph.print_adjacency_list()
-
-# Print the vertex data stored in the adjacency list
-#for key in graph.adjacency_list: print(str(key)+"| \n"+str(graph.adjacency_list[key].next))
-
-# Check if an edge exists between two nodes
-#print(graph.check_edge(61,19))
-
-# userchoice = 1
-# while userchoice != 0:
-#     userchoice = input("Input betwwen 1 to 4 run the question progream or Input 0 to terminate: ")
+userchoice = 1
+while userchoice != 0:
+    userchoice = input("Input betwwen 1 to 4 run the question progream or Input 0 to terminate: ")
     
-#     # ------------------------------------------------------------------------------------
-#     # QUESTION NUMBER 1
-#     # ------------------------------------------------------------------------------------
-#     if int(userchoice) == 1:
-#         top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: \nEnter Data:")
-#         bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: \nEnter Data:")
-        
-#         temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
-#         temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
-        
-        
-#         if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
-#             top_left_coord = (temp_value_x[0], temp_value_x[1])
-#             bottom_right_coord = (temp_value_y[0], temp_value_y[1])
-#         else:
-#             print("Coordinate range out of bound. Try Again.")
-#             continue
-#         print(graph.junction_sort( (0,0), (300,300) ))
+    # ------------------------------------------------------------------------------------
+    # QUESTION NUMBER 1
+    # ------------------------------------------------------------------------------------
+    if int(userchoice) == 1:
+        while True:
+            top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 0,0 \nEnter Data:")
+            bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 300,300\nEnter Data:")
+
+            temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
+            temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
+
+            if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
+                top_left_coord = (temp_value_x[0], temp_value_x[1])
+                bottom_right_coord = (temp_value_y[0], temp_value_y[1])
+                print(graph.junction_sort( top_left_coord, bottom_right_coord ))
+                break
+            else:
+                print("Coordinate range out of bound. Try Again.")
+                flag = input("Enter 0 to exit this program or else press enter.")
+                if flag == '0':
+                    break
         
         
         
     
     
-#     # ------------------------------------------------------------------------------------
-#     # QUESTION NUMBER 2
-#     # ------------------------------------------------------------------------------------
-#     elif int(userchoice) == 2:
-#         pass
+    # ------------------------------------------------------------------------------------
+    # QUESTION NUMBER 2
+    # ------------------------------------------------------------------------------------
+    elif int(userchoice) == 2:
+        pass
     
     
-#     # ------------------------------------------------------------------------------------
-#     # QUESTION NUMBER 3
-#     # ------------------------------------------------------------------------------------
-#     elif int(userchoice) == 3:
-#         junction_to_dam = input("Enter the junction to dam: ")
-#         while not(graph.data(junction_to_dam)):
-#             print("Error: junction doesn't exist.")
-#             junction_to_dam = input("Re-enter the junction to dam: ")
+    # ------------------------------------------------------------------------------------
+    # QUESTION NUMBER 3
+    # ------------------------------------------------------------------------------------
+    elif int(userchoice) == 3:
+        print("Please keep in mind that the coordinate will get the nearest junction regardless of the distance from the coordinate.\nEnter the Coordinate nearest to the dam you want to dam. ")
+        x_coord = 0
+        y_coord = 0
+        while True:
+            junction_to_dam = input("\nPlease enter the coordinate as such:\nexample:210,170\nEnter data: ")
+            temp_value = [int(i) for i in junction_to_dam.split(',')]
+            if validate_coordinate(temp_value[0], temp_value[1]):
+                x_coord = temp_value[0]
+                y_coord = temp_value[1]
+                graph.new_flow(x_coord,y_coord)
+                break
+            else:
+                print("Error: Coordinate out of bound. Try Again.")
+                flag = input("Enter 0 to exit this program or else press enter.")
+                if flag == '0':
+                    break
 
-#
-#        graph.new_flow(junction_to_dam)
-#
+
+
     
-#     # ------------------------------------------------------------------------------------
-#     # QUESTION NUMBER 4
-#     # ------------------------------------------------------------------------------------
-#     elif int(userchoice) == 4:
-#         pass
+    # ------------------------------------------------------------------------------------
+    # QUESTION NUMBER 4
+    # ------------------------------------------------------------------------------------
+    elif int(userchoice) == 4:
+        pass
     
     
-#     # ------------------------------------------------------------------------------------
-#     # PROGRAM TERMINATION
-#     # ------------------------------------------------------------------------------------
-#     else:
-#         break
-
-# source_node_id = 32  
-# traversed_nodes = graph.traverse_to_node1(source_node_id)
-# print("Traversed nodes from source to node 1:", traversed_nodes)
-
-# junction_list = graph.get_junction_list()
-        
-# # dam_node = input(f'The following are the list of junction nodes:{junction_list} \nEnter the junction node for damming:')
-# dam_node = '42'
-# if not dam_node.isdigit():
-#     raise ValueError("Please enter input.")
-
-# dam_node = int(dam_node)
-
-# if dam_node not in junction_list:
-#     raise ValueError("Please enter valid node.")
-
-# traversed_nodes = graph.traverse_to_node1(dam_node)
-# for node in traversed_nodes:
-#     temp_data = graph.data(node)
-#     print(f'node_id: {node} {temp_data}')
-# print("Traversed nodes from source to node 1:", traversed_nodes)
+    # ------------------------------------------------------------------------------------
+    # PROGRAM TERMINATION
+    # ------------------------------------------------------------------------------------
+    else:
+        break
 
 
