@@ -241,6 +241,49 @@ class Graph:
         # Return sorted in reverse order (highest to lowest)
         return MergedSort_Dict(verticies_dict)[::-1]
     
+    # Prints reduction in flow rate at each junction along the river
+    def new_flow(self, junction_to_dam: int):
+        if not(self.data(junction_to_dam)):
+            print("Junction doesn't exist")
+            return
+
+        # Find where the junctions flows towards
+        junctions_dest = None
+        for edge in LL_as_array(self.data(junction_to_dam))[1:]:
+            if self.is_river(junction_to_dam, edge.node):
+                junctions_dest = edge.node
+                break
+        
+        if not(junctions_dest):
+            print("Node isn't part of a river")
+            return
+        
+        # Find the edge to dam
+        for edge in LL_as_array(self.data(junction_to_dam))[1:]:
+            if edge.node == junctions_dest:
+                edge_to_dam = edge
+        
+        # Used for reducing flow rate of proceding rivers
+        pre_dam_flow = edge_to_dam.flow_rate
+        # Dam edge, assume stops all flow
+        edge_to_dam.flow_rate = 0
+
+        print("The following junctions have a decreased flow of: "+str(pre_dam_flow))
+
+        # Traverse down river unill reaching end
+        river_path = self.traverse_to_node1(edge_to_dam.node)
+        # For ever node that has a proceding node
+        for i in range(len(river_path)-1):
+            for edge in LL_as_array(self.data(river_path[i]))[1:]:
+                # If edge dosen't go to next step in river, skip it
+                if edge.node != river_path[i+1]: continue
+                # Reduce flow by the amount provided pre-damming
+                edge.flow_rate -= pre_dam_flow
+                print(str(river_path[i]) + " (new flow: " + str(edge.flow_rate)+")")
+
+                
+
+    
     def traverse_to_node1(self, source_node_id):
         # Create an empty list to store the traversed nodes
         traversed_nodes = []
@@ -381,6 +424,8 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
+graph.new_flow(35)
+
 # Print a list of junctions, from highest to smallest flow rate in region
 # print(graph.junction_sort( (0,0), (300,300) ))
 
@@ -432,8 +477,14 @@ graph.populate_flow_rate()
 #     # QUESTION NUMBER 3
 #     # ------------------------------------------------------------------------------------
 #     elif int(userchoice) == 3:
-        
-#         pass
+#         junction_to_dam = input("Enter the junction to dam: ")
+#         while not(graph.data(junction_to_dam)):
+#             print("Error: junction doesn't exist.")
+#             junction_to_dam = input("Re-enter the junction to dam: ")
+
+#
+#        graph.new_flow(junction_to_dam)
+#
     
 #     # ------------------------------------------------------------------------------------
 #     # QUESTION NUMBER 4
