@@ -12,7 +12,7 @@
     # 4. Dam can only be placed in junction node.
     #       - We assume that the junction resets the flow rate to 0, as dam will at least temporarily block any flow in the river below the dam while it is filling.
     #       - Assuming only one dam will be placed at a time.
-    #       - We assume that in the funciton `new_flow(dam_x, dam_y)`, which simulates the flow rate of the subiquent nodes flow rate change if a dam is placed before a junciton, takes input of the nearest coordinate to the choosen junction rather then the coordinate for the dam itself.
+    #       - We assume that in the function `new_flow(dam_x, dam_y)`, which simulates the flow rate of the subsequent nodes flow rate change if a dam is placed before a junction, takes input of the nearest coordinate to the chosen junction rather than the coordinate for the dam itself.
     # ------------------------------------------------------------------------------------
 import math     # For calculating distance 
 import csv
@@ -248,6 +248,8 @@ class Graph:
         if not(self.data(junction_to_dam)):
             print("Junction doesn't exist")
             return
+        
+        print(f'The junction node to be dammed is: {junction_to_dam}')
 
         # Find where the junctions flows towards
         junctions_dest = None
@@ -501,7 +503,7 @@ while userchoice != 0:
         x_coord = 0
         y_coord = 0
         while True:
-            junction_to_dam = input("\nPlease enter the coordinate as such:\nexample:210,170\nEnter data: ")
+            junction_to_dam = input("\nPlease enter the coordinate as such:\nexample: x_coordinate,y_coordinate: 210,170\nEnter data: ")
             temp_value = [int(i) for i in junction_to_dam.split(',')]
             if validate_coordinate(temp_value[0], temp_value[1]):
                 x_coord = temp_value[0]
