@@ -266,7 +266,7 @@ class Graph:
         # Used for reducing flow rate of proceding rivers
         pre_dam_flow = edge_to_dam.flow_rate
         # Dam edge, assume stops all flow
-        edge_to_dam.flow_rate = 0
+        # edge_to_dam.flow_rate = 0
 
         print("The following junctions have a decreased flow of: "+str(pre_dam_flow))
 
@@ -278,9 +278,20 @@ class Graph:
                 # If edge dosen't go to next step in river, skip it
                 if edge.node != river_path[i+1]: continue
                 # Reduce flow by the amount provided pre-damming
-                edge.flow_rate -= pre_dam_flow
-                print(str(river_path[i]) + " (new flow: " + str(edge.flow_rate)+")")
-
+                # edge.flow_rate -= pre_dam_flow
+                new_flow_rate = edge.flow_rate - pre_dam_flow
+                print(str(river_path[i]) + " (new flow: " + str(new_flow_rate)+")")
+                
+    def print_flow_rate(self):
+        # Iterate over all nodes
+        for node in self.adjacency_list:
+            print(str(node), end="")     # Start of path
+            # Iterate over all edges
+            for edge in LL_as_array(self.data(node))[1:]:
+                # print(" -> " + str(edge.node), end="")
+                print(f' -> ({edge.node},{edge.flow_rate})', end="")
+            # Ends when pointing to null
+            print(" -> None")
                 
 
     
@@ -424,7 +435,13 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
+# graph.print_flow_rate()
+print("-----------------------------")
 graph.new_flow(35)
+print("-----------------------------")
+
+# graph.print_flow_rate()
+
 
 # Print a list of junctions, from highest to smallest flow rate in region
 # print(graph.junction_sort( (0,0), (300,300) ))
@@ -499,9 +516,9 @@ graph.new_flow(35)
 #     else:
 #         break
 
-source_node_id = 32  
-traversed_nodes = graph.traverse_to_node1(source_node_id)
-print("Traversed nodes from source to node 1:", traversed_nodes)
+# source_node_id = 32  
+# traversed_nodes = graph.traverse_to_node1(source_node_id)
+# print("Traversed nodes from source to node 1:", traversed_nodes)
 
 # junction_list = graph.get_junction_list()
         
