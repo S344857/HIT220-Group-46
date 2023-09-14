@@ -244,27 +244,39 @@ class Graph:
     
     # Prints reduction in flow rate at each junction along the river
     def new_flow(self, dam_x: int, dam_y:int):
+        # get the closest junction type node to the coordinate
         junction_to_dam = self.find_closest_junction(dam_x,dam_y)
+        # if the junction doesn't exist, exit the function
         if not(self.data(junction_to_dam)):
             print("Junction doesn't exist")
             return
         
+        # print the obtained junction node
         print(f'The junction node to be dammed is: {junction_to_dam}')
 
         # Find where the junctions flows towards
         junctions_dest = None
+        # iterate over the adjacent edges
         for edge in LL_as_array(self.data(junction_to_dam))[1:]:
+            # if the junciton node and the adjacent node is a river
             if self.is_river(junction_to_dam, edge.node):
+                # assign the edge adjacent node to the junctions_dest
                 junctions_dest = edge.node
+                # exit the loop
                 break
         
+        # if no junciton destination is not found
         if not(junctions_dest):
+            # print the message and exit function
             print("Node isn't part of a river")
             return
         
         # Find the edge to dam
+        # iterate the adjacent edges for the junciton dam
         for edge in LL_as_array(self.data(junction_to_dam))[1:]:
+            # if the edge node id and destination node are same
             if edge.node == junctions_dest:
+                # assign the edge to edge for the dam
                 edge_to_dam = edge
         
         # Used for reducing flow rate of proceding rivers
@@ -272,10 +284,11 @@ class Graph:
         # Dam edge, assume stops all flow
         # edge_to_dam.flow_rate = 0
 
+        # print the amount of flow decreased
         print("The following junctions have a decreased flow of: "+str(pre_dam_flow))
 
         # Traverse down river unill reaching end
-        river_path = self.traverse_to_node1(edge_to_dam.node)
+        river_path = self.traverse_to_final_outlet(edge_to_dam.node)
         # For ever node that has a proceding node
         for i in range(len(river_path)-1):
             for edge in LL_as_array(self.data(river_path[i]))[1:]:
@@ -286,12 +299,16 @@ class Graph:
                 new_flow_rate = edge.flow_rate - pre_dam_flow
                 print(str(river_path[i]) + " (new flow: " + str(new_flow_rate)+")")
                 
-        
+    # funciton to find the closest "junction" node to a given x and y coordinate
     def find_closest_junction(self, x, y):
+        # Initialize a variable to store the closest junction node ID
         closest_junction = None
+        # Initialize a variable to store the closest distance (set to positive infinity)
         closest_distance = float('inf')
 
+        # Iterate through all nodes in the adjacency list
         for node_id in self.adjacency_list:
+            # Get the data for the current node
             node = self.data(node_id)
 
             # Check if the node is a junction and calculate the distance
@@ -302,9 +319,10 @@ class Graph:
                 if distance < closest_distance:
                     closest_distance = distance
                     closest_junction = node_id
-
+        # return the node id of the closest junction
         return closest_junction
-                
+     
+     # function to print the flow rate of each edge in the adjacency list           
     def print_flow_rate(self):
         # Iterate over all nodes
         for node in self.adjacency_list:
@@ -317,8 +335,8 @@ class Graph:
             print(" -> None")
                 
 
-    
-    def traverse_to_node1(self, source_node_id):
+    # Function that returns the traversed path from the input id to node 1
+    def traverse_to_final_outlet(self, source_node_id):
         # Create an empty list to store the traversed nodes
         traversed_nodes = []
 
@@ -443,9 +461,13 @@ def MergedSort_Dict(dictionary: dict):
     # List of keys, ordered by their values
     return tuple(keys)
 
+#funciton to validate that the passed x and y coordinate are valid
 def validate_coordinate(x_coord, y_coord):
+    # flag variable to check if the x coordinate is valid
     x_flag = True if x_coord >= 0 and x_coord <= 650 else False
+    # flag variable to check if the y coordinate is valid
     y_flag = True if y_coord >= 0 and y_coord <= 650 else False
+    # return the boolean value of the result    
     return x_flag and y_flag
 
 
@@ -458,29 +480,44 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
+# vairable to check the switch case 
 userchoice = 1
+# loop until value is 0
 while userchoice != 0:
+    # take input for which program to run
     userchoice = input("Input betwwen 1 to 4 run the question progream or Input 0 to terminate: ")
     
     # ------------------------------------------------------------------------------------
     # QUESTION NUMBER 1
     # ------------------------------------------------------------------------------------
     if int(userchoice) == 1:
+        # loop until the condition is false
         while True:
+            # input coordinate for top left
             top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 0,0 \nEnter Data:")
+            # input coordinate for bottom right
             bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 300,300\nEnter Data:")
 
+            # split x values
             temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
+            # split y values
             temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
 
+            # validating the coordinates
             if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
+                # assign the validated coordinates
                 top_left_coord = (temp_value_x[0], temp_value_x[1])
                 bottom_right_coord = (temp_value_y[0], temp_value_y[1])
+                # sorting and printing the sorted nodes within the provided region
                 print(graph.junction_sort( top_left_coord, bottom_right_coord ))
                 break
+            # if not valid
             else:
+                # print error message
                 print("Coordinate range out of bound. Try Again.")
+                # take input for exit
                 flag = input("Enter 0 to exit this program or else press enter.")
+                # if input is 0, exit the sub-program
                 if flag == '0':
                     break
         
@@ -499,20 +536,30 @@ while userchoice != 0:
     # QUESTION NUMBER 3
     # ------------------------------------------------------------------------------------
     elif int(userchoice) == 3:
+        # print assumption and rules
         print("Please keep in mind that the coordinate will get the nearest junction regardless of the distance from the coordinate.\nEnter the Coordinate nearest to the dam you want to dam. ")
-        x_coord = 0
-        y_coord = 0
+        # loop until condition is false
         while True:
+            # take input for x and y coordinates
             junction_to_dam = input("\nPlease enter the coordinate as such:\nexample: x_coordinate,y_coordinate: 210,170\nEnter data: ")
+            # assign the split value to variale
             temp_value = [int(i) for i in junction_to_dam.split(',')]
+            # if the coordintates are valid
             if validate_coordinate(temp_value[0], temp_value[1]):
+                # assign validated coordinates
                 x_coord = temp_value[0]
                 y_coord = temp_value[1]
+                # call the new_flow funciton with the coordinate input
                 graph.new_flow(x_coord,y_coord)
+                # exit the sub-program
                 break
+            # if the coordinates are not valid
             else:
+                # print error message
                 print("Error: Coordinate out of bound. Try Again.")
+                # take input for exit
                 flag = input("Enter 0 to exit this program or else press enter.")
+                # if input is 0, exit the sub-program
                 if flag == '0':
                     break
 
