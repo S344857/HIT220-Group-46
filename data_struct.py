@@ -639,4 +639,64 @@ while userchoice != 0:
     else:
         break
 
+#Assignment 3.3
+# Question 1
 
+#Assignment 3.3, 
+# Question:1
+
+function findCycle(graph, startNode, currentNode, visited, path):
+    # Mark the current node as visited and add it to the path
+    visited[currentNode] = True
+    path.append(currentNode)
+
+    # Check all adjacent nodes of the current node
+    for neighbor in graph[currentNode]:
+        # If the neighbor is the starting node and the path length is 4 ([(3,4,33,42)]), we've found a cycle
+        if neighbor == startNode and len(path) == 4:
+            return path
+
+        # If the neighbor is not visited, recursively search for a cycle starting from it
+        if not visited[neighbor]:
+            cycle = findCycle(graph, startNode, neighbor, visited, path)
+
+            # If a cycle is found, return it
+            if cycle:
+                return cycle
+
+    # If no cycle is found starting from this node, backtrack
+    path.pop()
+    visited[currentNode] = False
+    return None
+
+function findCyclePath(graph):
+    # Initialize visited array to keep track of visited nodes
+    visited = {}
+    for node in graph:
+        visited[node] = False
+
+    # Iterate through all nodes in the graph and start DFS from each unvisited node
+    for startNode in graph:
+        path = []
+        cycle = findCycle(graph, startNode, startNode, visited, path)
+
+        # If a cycle is found, return it
+        if cycle:
+            return cycle
+
+    # If no cycle is found, return None
+    return None
+
+# Example usage:
+graph = {
+    3: [4],
+    4: [33],
+    33: [42],
+    42: [3]
+}
+
+cyclePath = findCyclePath(graph)
+if cyclePath:
+    print("Cycle found:", cyclePath)
+else:
+    print("No cycle found")
