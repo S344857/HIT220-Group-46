@@ -389,6 +389,122 @@ class Graph:
         
         self.shortest_path_search(top_left, bottom_right, weights)
 
+# Finds insertion index into tour that minimizes the path
+    def find_cheapest_insertion(self, to_insert, tour):
+        min_lenght = float('inf')
+
+        for i in range(len(tour)):
+            cur_lenght = 0
+            # Since we are replacing this connection, remove its lenght
+            cur_lenght -= self.path_distance(self.data(tour[i]), self.data(tour[i-1]))
+            # Add the cost of new connection, from prevous to current, then cur to next
+            cur_lenght += self.path_distance(self.data(tour[i-1]), self.data(to_insert))
+            cur_lenght += self.path_distance(self.data(to_insert), self.data(tour[i]))
+
+            #print(f"   i[{i}]: {round(cur_lenght,2)}")
+            #print(f"      Dec: {round(self.path_distance(self.data(tour[i]), self.data(tour[i-1])))}")
+            #print(f"      P->C: {round(self.path_distance(self.data(tour[i-1]), self.data(to_insert)))}")
+            #print(f"      C->N: {round(self.path_distance(self.data(to_insert), self.data(tour[i])))}")
+
+            # Save if shortest found
+            if cur_lenght < min_lenght:
+                min_lenght = cur_lenght
+                best_index = i
+        
+        #print(f"Index: {best_index}, To insert: {to_insert}")
+        return (min_lenght, best_index)
+
+    # Finds the shortest path to vist all nodes (when gaph is complete)
+    def flight_path(self):
+        # Get all values to search
+        to_vist = set()
+        for node in self.adjacency_list:
+            to_vist.add(node)
+        
+
+        tour = [11,60,12]  # Temp values
+        #tour_lenght = 0
+        # We have "visited" all values in current tour
+        for node in tour: to_vist.remove(node)
+            #tour_lenght += self.path_distance(self.data(tour[i]), self.data(tour[i-1]))
+
+        # Cheapest insertion algorithm to find reasonable tour
+        while to_vist:
+            best_lenght = float('inf')
+            for node in to_vist:
+                print(f"# To insert: {node}")
+
+                new_lenght, insert_index = self.find_cheapest_insertion(node, tour)
+                print(f"# {new_lenght}, {insert_index}\n")
+        
+                # If a better insertion was found, save it
+                if new_lenght < best_lenght:
+                    best_lenght = new_lenght
+
+                    node_to_add = node
+                    index_to_insert = insert_index
+
+            tour.insert(index_to_insert, node_to_add) # Add best to current tour
+            print(f"Best insertion: {node_to_add}, {tour}")
+            to_vist.remove(node_to_add) # Since in tour, we have visited it
+            #print(input("BREAK"))
+        
+        pre_tour = 0
+        for i in range(len(tour)):
+            pre_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+
+        # Improve tour using 2-opt switching
+        # Keep swapping until no more improvement made
+        improved = True
+        while improved:
+            improved = False
+            for n in range(1,len(tour)):
+                for m in range(n+1, len(tour)):
+                    improvement = 0
+                    # Remove cost of connections that will be replaced
+                    #   Cost of going to, and away from n-1
+                    improvement += self.path_distance(self.data(tour[n-2]), self.data(tour[n-1]))
+                    improvement += self.path_distance(self.data(tour[n-1]), self.data(tour[n]))
+                    #   Going to, and away from m-1
+                    improvement += self.path_distance(self.data(tour[m-2]), self.data(tour[m-1]))
+                    improvement += self.path_distance(self.data(tour[m-1]), self.data(tour[m]))
+
+                    # Add cost of replacements connections (swap n-1 <=> m-1)
+                    #   Going to, and away from m-1
+                    improvement -= self.path_distance(self.data(tour[n-2]),
+                                                      self.data(tour[m-1]))
+                    improvement -= self.path_distance(self.data(tour[m-1]),
+                                                      self.data(tour[n - int(m-1==n)]))
+                    #   Going to, and away from n-1
+                    improvement -= self.path_distance(self.data(tour[m-2+int(m-1==n)]),
+                                                      self.data(tour[n-1]))
+                    improvement -= self.path_distance(self.data(tour[n-1]),
+                                                      self.data(tour[m]))
+                    
+                    # Don't swap nodes that don't shorten the tour
+                    print(f" {tour[n-1]}[{n-1}] <=> {tour[m-1]}[{m-1}] ({round(improvement,2)})")
+                    if improvement <= 0: continue
+                    improved = True
+
+                    swap_holder = tour[n-1]
+                    tour[n-1] = tour[m-1]
+                    tour[m-1] = swap_holder
+
+                    cur_tour = 0
+                    for i in range(len(tour)):
+                        cur_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+                    print(f"Tour impr: {round(pre_tour-cur_tour,2)}")
+    
+                    pre_tour = cur_tour
+                    print(f"Current tour: {cur_tour}")
+
+
+                    print(tour)
+                    print(input("BREAK"))
+
+                print("\n")
+        print(f"\nFINAL PATH ({cur_tour})")
+        return tour
     
     def traverse_to_node1(self, source_node_id):
         # Create an empty list to store the traversed nodes
