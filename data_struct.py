@@ -205,7 +205,7 @@ class Graph:
             # Since we set all outgoing edges, we don't need it anymore
             incoming_flow.pop(search_node)
             search_queue.pop(0)         # Move the queue foward by one 
-    
+    """
     # Return junctions in region in order of flow rate (highest to lowest)
     def junction_sort(self, top_left: tuple, bottom_right: tuple):
         # Dictionary of all junctions's flow rate withn a given range
@@ -270,7 +270,7 @@ class Graph:
                 new_flow_rate = edge.flow_rate - pre_dam_flow
                 print(str(river_path[i]) + " (new flow: " + str(new_flow_rate)+")")
                 
-        
+    """ 
     def find_closest_junction(self, x, y):
         closest_junction = None
         closest_distance = float('inf')
@@ -299,7 +299,7 @@ class Graph:
                 print(f' -> ({edge.node},{edge.flow_rate})', end="")
             # Ends when pointing to null
             print(" -> None")
-    
+    """
     # Calculate "shortest" path with a exhaustive search but limiting the number of paths
     def shortest_path_search(self, top_left: tuple, bottom_right: tuple, weights=None):
         # Read CSV file 
@@ -388,47 +388,41 @@ class Graph:
         weights = {"water": 32, "road": 60}
         
         self.shortest_path_search(top_left, bottom_right, weights)
-
-# Finds insertion index into tour that minimizes the path
+    """
+    # Finds cheapest insertion index into tour
     def find_cheapest_insertion(self, to_insert, tour):
-        min_lenght = float('inf')
+        cheapest = float('inf')
 
         for i in range(len(tour)):
-            cur_lenght = 0
+            insert_cost = 0
             # Since we are replacing this connection, remove its lenght
-            cur_lenght -= self.path_distance(self.data(tour[i]), self.data(tour[i-1]))
+            insert_cost -= self.path_distance(self.data(tour[i]), self.data(tour[i-1]))
             # Add the cost of new connection, from prevous to current, then cur to next
-            cur_lenght += self.path_distance(self.data(tour[i-1]), self.data(to_insert))
-            cur_lenght += self.path_distance(self.data(to_insert), self.data(tour[i]))
+            insert_cost += self.path_distance(self.data(tour[i-1]), self.data(to_insert))
+            insert_cost += self.path_distance(self.data(to_insert), self.data(tour[i]))
 
-            #print(f"   i[{i}]: {round(cur_lenght,2)}")
-            #print(f"      Dec: {round(self.path_distance(self.data(tour[i]), self.data(tour[i-1])))}")
-            #print(f"      P->C: {round(self.path_distance(self.data(tour[i-1]), self.data(to_insert)))}")
-            #print(f"      C->N: {round(self.path_distance(self.data(to_insert), self.data(tour[i])))}")
-
-            # Save if shortest found
-            if cur_lenght < min_lenght:
-                min_lenght = cur_lenght
+            # Save index if shortest found
+            if insert_cost < cheapest:
+                cheapest = insert_cost
                 best_index = i
-        
         #print(f"Index: {best_index}, To insert: {to_insert}")
-        return (min_lenght, best_index)
+        return (cheapest, best_index)
 
-    # Finds the shortest path to vist all nodes (when gaph is complete)
-    def flight_path(self):
-        # Get all values to search
+    # Finds the shortest path to vist all in region (when gaph is complete)
+    def flight_path(self, top_left: tuple, bottom_right: tuple):
+        # Get region to search
         to_vist = set()
-        for node in self.adjacency_list:
+        for node in self.vertices_in_region(top_left, bottom_right):
             to_vist.add(node)
         
+        if len(to_vist) < 3:
+            raise ValueError("Graph must have at least 3 vertices")
+        
+        # Add any three points to tour and vist them
+        tour = [to_vist.pop() for loops in range(3)]
 
-        tour = [11,60,12]  # Temp values
-        #tour_lenght = 0
-        # We have "visited" all values in current tour
-        for node in tour: to_vist.remove(node)
-            #tour_lenght += self.path_distance(self.data(tour[i]), self.data(tour[i-1]))
-
-        # Cheapest insertion algorithm to find reasonable tour
+        # Use "Cheapest insertion" algorithm to find reasonable tour
+        # (Find cost of adding all possible, and add the cheapest to tour) 
         while to_vist:
             best_lenght = float('inf')
             for node in to_vist:
@@ -447,63 +441,63 @@ class Graph:
             tour.insert(index_to_insert, node_to_add) # Add best to current tour
             print(f"Best insertion: {node_to_add}, {tour}")
             to_vist.remove(node_to_add) # Since in tour, we have visited it
-            #print(input("BREAK"))
         
-        pre_tour = 0
-        for i in range(len(tour)):
-            pre_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+        ### To see if calculated improvement later on actually works
+        # Gets lenght of tour
+        """pre_tour = 0
+        for n in range(len(tour)):
+            pre_tour += self.path_distance(self.data(tour[n-1]), self.data(tour[n]))"""
 
-        # Improve tour using 2-opt switching
+        # Improve tour using 2-opt switching (switch all two edges)
         # Keep swapping until no more improvement made
         improved = True
         while improved:
             improved = False
-            for n in range(1,len(tour)):
-                for m in range(n+1, len(tour)):
-                    improvement = 0
-                    # Remove cost of connections that will be replaced
-                    #   Cost of going to, and away from n-1
-                    improvement += self.path_distance(self.data(tour[n-2]), self.data(tour[n-1]))
-                    improvement += self.path_distance(self.data(tour[n-1]), self.data(tour[n]))
-                    #   Going to, and away from m-1
-                    improvement += self.path_distance(self.data(tour[m-2]), self.data(tour[m-1]))
+            for n in range(len(tour)-1):
+                for m in range(n+2, len(tour)):
+                    # Cost of paths that will be replaced
+                    improvement = self.path_distance(self.data(tour[n-1]), self.data(tour[n]))
                     improvement += self.path_distance(self.data(tour[m-1]), self.data(tour[m]))
+                    # Cost of replacement
+                    improvement -= self.path_distance(self.data(tour[n-1]), self.data(tour[m-1]))
+                    improvement -= self.path_distance(self.data(tour[n]), self.data(tour[m]))
 
-                    # Add cost of replacements connections (swap n-1 <=> m-1)
-                    #   Going to, and away from m-1
-                    improvement -= self.path_distance(self.data(tour[n-2]),
-                                                      self.data(tour[m-1]))
-                    improvement -= self.path_distance(self.data(tour[m-1]),
-                                                      self.data(tour[n - int(m-1==n)]))
-                    #   Going to, and away from n-1
-                    improvement -= self.path_distance(self.data(tour[m-2+int(m-1==n)]),
-                                                      self.data(tour[n-1]))
-                    improvement -= self.path_distance(self.data(tour[n-1]),
-                                                      self.data(tour[m]))
-                    
-                    # Don't swap nodes that don't shorten the tour
-                    print(f" {tour[n-1]}[{n-1}] <=> {tour[m-1]}[{m-1}] ({round(improvement,2)})")
-                    if improvement <= 0: continue
-                    improved = True
+                    print(f" {tour[n]}[{n}] <=> {tour[m-1]}[{m-1}] ({round(improvement,2)})")
+                    if  improvement > 0:
+                        improved = True
+                        # Swap the order of nodes n to m
+                        tour[n : m] = reversed(tour[n : m])
 
-                    swap_holder = tour[n-1]
-                    tour[n-1] = tour[m-1]
-                    tour[m-1] = swap_holder
+                        ### To see if calculated improvement actually works
+                        """cur_tour = 0
+                        for i in range(len(tour)):
+                            cur_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+                        print(f"Tour impr: {round(pre_tour-cur_tour,2)}")
 
-                    cur_tour = 0
-                    for i in range(len(tour)):
-                        cur_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
-                    print(f"Tour impr: {round(pre_tour-cur_tour,2)}")
-    
-                    pre_tour = cur_tour
-                    print(f"Current tour: {cur_tour}")
+                        pre_tour = cur_tour
+                        print(f"Current tour: {cur_tour}")
 
+                        print(tour)
+                        print(input("BREAK"))"""
+        # Tour must start at "top right point of area"
+        # Find closest to "top right"
+        shortest_dis = float('inf')
+        for node in tour:
+            node_distance = self.path_distance(self.data(node), Vertex(650,0,""))
+            print(f"Node: {node}, {node_distance}")
+            if node_distance < shortest_dis:
+                shortest_dis = node_distance
+                closest = node
+        print(f"\nCLOSEST: {closest}")
+        print(f"BEFORE SHIFT:\n{tour}")
 
-                    print(tour)
-                    print(input("BREAK"))
+        # Shift list, until front is closest
+        while tour[0] != closest:
+            tour.insert(0, tour.pop(-1))
 
-                print("\n")
-        print(f"\nFINAL PATH ({cur_tour})")
+        tour.append(tour[0])    # Tour must end at start
+        print(f"\n##FINAL PATH##\n{tour}")
+        """print(f"Cost: {pre_tour}")"""
         return tour
     
     def traverse_to_node1(self, source_node_id):
@@ -647,6 +641,10 @@ graph.populate_distance()
 graph.populate_flow_rate()
 
 
+
+# QUESTION 2: "Provide flight path"
+graph.flight_path((0,0), (650,650))
+"""
 userchoice = 1
 while userchoice != 0:
     userchoice = input("Input betwwen 1 to 4 run the question progream or Input 0 to terminate: ")
@@ -754,14 +752,12 @@ while userchoice != 0:
     # ------------------------------------------------------------------------------------
     else:
         break
-
-#Assignment 3.3
-# Question 1
-
+"""
+"""
 #Assignment 3.3, 
 # Question:1
 
-function findCycle(graph, startNode, currentNode, visited, path):
+def findCycle(graph, startNode, currentNode, visited, path):
     # Mark the current node as visited and add it to the path
     visited[currentNode] = True
     path.append(currentNode)
@@ -785,7 +781,7 @@ function findCycle(graph, startNode, currentNode, visited, path):
     visited[currentNode] = False
     return None
 
-function findCyclePath(graph):
+def findCyclePath(graph):
     # Initialize visited array to keep track of visited nodes
     visited = {}
     for node in graph:
@@ -816,3 +812,4 @@ if cyclePath:
     print("Cycle found:", cyclePath)
 else:
     print("No cycle found")
+"""
