@@ -1,26 +1,11 @@
-    # ------------------------------------------------------------------------------------
-    # ASSUMPTIONS
-    # ------------------------------------------------------------------------------------
-    # 1. Node number 1 is the destination node where all water flows towards: 
-    #       - Reason for assumption: Node 1 is placed in the Timor Sea which is the largest notable near-by body of water.
-    #       - Rivers in-land are typically at a higher elevation than sea-level and flow toward a lower elevation.
-    # 2. The map we have can be represented with a directed tree; all nodes are connected by exactly one path.
-    #       - This is necessary, as if there exist multiple paths between two nodes, the direction of all edges may not be determinable based on the data we have.
-    #       - This assumption holds true for our map.
-    # 3. The range x and y coordinates can only be between the value of 0 to 650, inclusively.
-    #       - This assumption holds true in accordance to the provided map.
-    # 4. Dam can only be placed in junction node.
-    #       - We assume that the junction resets the flow rate to 0, as dam will at least temporarily block any flow in the river below the dam while it is filling.
-    #       - Assuming only one dam will be placed at a time.
-    #       - We assume that in the function `new_flow(dam_x, dam_y)`, which simulates the flow rate of the subsequent nodes flow rate change if a dam is placed before a junction, takes input of the nearest coordinate to the chosen junction rather than the coordinate for the dam itself.
-    # ------------------------------------------------------------------------------------
-import math     # For calculating distance 
+import math     # For calculating distance
+import itertools    # For path permutations
 import csv
 
 CSV_FILE = "water_data.csv"
 
 # Used for working out if an edge represents a river
-river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge"}
+river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge", "sea entrance"}
 
 source_type = "headwater"
 
@@ -118,8 +103,7 @@ class Graph:
             self.data(source).type not in river_types
         ): return False
         # Rivers can't flow towards a source
-        if (self.data(destination).type == source_type) and (
-            self.data(destination).next != None ):    # But can to the destination
+        if (self.data(destination).type == source_type):
             return False
         
         # Skip blacklisted paths
@@ -238,7 +222,7 @@ class Graph:
                     continue
 
                 verticies_dict[node] = edge.flow_rate
-        #print(verticies_dict)
+        print(verticies_dict)
         # Return sorted in reverse order (highest to lowest)
         return MergedSort_Dict(verticies_dict)[::-1]
     
@@ -333,7 +317,95 @@ class Graph:
                 print(f' -> ({edge.node},{edge.flow_rate})', end="")
             # Ends when pointing to null
             print(" -> None")
-                
+    
+    # Calculate "shortest" path with a exhaustive search but limiting the number of paths
+    def shortest_path_search(self, top_left: tuple, bottom_right: tuple, weights=None):
+        # Read CSV file 
+        nodes_data = {}
+        with open("water_data.csv", mode="r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                node_id = int(row["Node"])
+                x = float(row["x"])
+                y = float(row["y"])
+                linked_ids = [int(linked) for linked in row["linked"].split(',') if linked != '']
+                nodes_data[node_id] = {"x": x, "y": y, "linked": linked_ids, "type": row["type"]}
+
+        # X, Y range
+        x_min, y_min = top_left
+        x_max, y_max = bottom_right
+
+        # Filter nodes within the specified range
+        nodes_in_range = {node_id: node_info for node_id, node_info in nodes_data.items() if
+                  x_min <= node_info["x"] <= x_max and y_min <= node_info["y"] <= y_max}
+        
+        # Generate all possible path
+        permutations = itertools.permutations(nodes_in_range.keys())
+
+        # Tracking the best path and its distance
+        best_path = None
+        best_distance = float('inf')
+
+        # Calculate distances
+        print("Calculating shortest path...")
+        count = 0
+        search_limit = 100000      # Since we don't need the perfect solution, limit the paths searched
+        for path in permutations:
+            count += 1
+            if count == search_limit: break
+            if count % 16789 == 0:
+                print(f"Paths searched: {count} ({int(count/search_limit*100)}%)")
+
+            path_distance = 0
+            prev_node = None
+
+            for node_id in path:
+                node_info = nodes_in_range[node_id]
+
+                if prev_node is not None:
+                    distance = self.path_distance(
+                        Vertex(node_info["x"], node_info["y"], ""), Vertex(nodes_in_range[prev_node]["x"], nodes_in_range[prev_node]["y"],""))
+                    
+                    # If there is weights
+                    if weights:
+                        if self.is_river(node_id, prev_node):
+                            distance /= weights["water"]    # Scale by river weight
+                        else:
+                            distance /= weights["road"]     # Scale by road weight
+                    #distance = calculate_distance(node_info, nodes_in_range[prev_node])
+                    path_distance += distance
+
+                prev_node = node_id
+
+            # Add the distance from the last node back to the starting node
+            # Scale distance if weighted
+            scale_factor = 1
+            if weights:
+                if self.is_river(path[-1], path[0]):
+                    scale_factor = weights["water"]    # Scale by river weight
+                else:
+                    scale_factor = weights["road"]     # Scale by road weight
+            # Add distance
+            path_distance += self.path_distance(
+                Vertex(node_info["x"], node_info["y"], ""), Vertex(nodes_in_range[path[0]]["x"], nodes_in_range[path[0]]["y"],"")) / scale_factor
+            #path_distance += calculate_distance(node_info, nodes_in_range[path[0]])
+
+            # Update the best path if this path is shorter
+            if path_distance < best_distance:
+                best_distance = path_distance
+                best_path = path
+        print(f"Paths searched: {count} ({int(count/search_limit*100)}%)", end="\n\n")
+
+        print(f"Shortest path to visit all nodes within {top_left} to {bottom_right}:")
+        shortest_path_list = [f"{node_id}" for node_id in best_path]
+        print(tuple(shortest_path_list))
+        print(f"Total distance of the shortest path: {best_distance}")
+
+    # Shortest path, but with weights for diffrent types
+    def weighted_shortest_path_search(self, top_left: tuple, bottom_right: tuple):
+        weights = {"water": 32, "road": 60}
+        
+        self.shortest_path_search(top_left, bottom_right, weights)
 
     # Function that returns the traversed path from the input id to node 1
     def traverse_to_final_outlet(self, source_node_id):
@@ -529,7 +601,24 @@ while userchoice != 0:
     # QUESTION NUMBER 2
     # ------------------------------------------------------------------------------------
     elif int(userchoice) == 2:
-        pass
+        while True:
+            top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 0,0 \nEnter Data:")
+            bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 300,300\nEnter Data:")
+
+            temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
+            temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
+
+            if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
+                top_left_coord = (temp_value_x[0], temp_value_x[1])
+                bottom_right_coord = (temp_value_y[0], temp_value_y[1])
+                graph.shortest_path_search( top_left_coord, bottom_right_coord )
+                break
+
+            else:
+                print("Coordinate range out of bound. Try Again.")
+                flag = input("Enter 0 to exit this program or else press enter.")
+                if flag == '0':
+                    break
     
     
     # ------------------------------------------------------------------------------------
@@ -570,7 +659,24 @@ while userchoice != 0:
     # QUESTION NUMBER 4
     # ------------------------------------------------------------------------------------
     elif int(userchoice) == 4:
-        pass
+        while True:
+            top_left_coord_string = input("Enter the Top-Left Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 0,0 \nEnter Data:")
+            bottom_right_coord_string = input("Enter the Bottom-Right Coordinate of the Range as such: \nExample: x_coordinate, y_coordinate: 300,300\nEnter Data:")
+
+            temp_value_x = [int(i) for i in top_left_coord_string.split(',')]
+            temp_value_y = [int(i) for i in bottom_right_coord_string.split(',')]
+
+            if  validate_coordinate(temp_value_x[0], temp_value_x[1]) and validate_coordinate(temp_value_y[0], temp_value_y[1]):
+                top_left_coord = (temp_value_x[0], temp_value_x[1])
+                bottom_right_coord = (temp_value_y[0], temp_value_y[1])
+                graph.weighted_shortest_path_search( top_left_coord, bottom_right_coord )
+                break
+
+            else:
+                print("Coordinate range out of bound. Try Again.")
+                flag = input("Enter 0 to exit this program or else press enter.")
+                if flag == '0':
+                    break
     
     
     # ------------------------------------------------------------------------------------
