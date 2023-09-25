@@ -401,7 +401,7 @@ class Graph:
             insert_cost += self.path_distance(self.data(tour[i-1]), self.data(to_insert))
             insert_cost += self.path_distance(self.data(to_insert), self.data(tour[i]))
 
-            # Save index if shortest found
+            # Save index if shorter found
             if insert_cost < cheapest:
                 cheapest = insert_cost
                 best_index = i
@@ -426,10 +426,8 @@ class Graph:
         while to_vist:
             best_lenght = float('inf')
             for node in to_vist:
-                print(f"# To insert: {node}")
 
                 new_lenght, insert_index = self.find_cheapest_insertion(node, tour)
-                print(f"# {new_lenght}, {insert_index}\n")
         
                 # If a better insertion was found, save it
                 if new_lenght < best_lenght:
@@ -439,14 +437,7 @@ class Graph:
                     index_to_insert = insert_index
 
             tour.insert(index_to_insert, node_to_add) # Add best to current tour
-            print(f"Best insertion: {node_to_add}, {tour}")
             to_vist.remove(node_to_add) # Since in tour, we have visited it
-        
-        ### To see if calculated improvement later on actually works
-        # Gets lenght of tour
-        """pre_tour = 0
-        for n in range(len(tour)):
-            pre_tour += self.path_distance(self.data(tour[n-1]), self.data(tour[n]))"""
 
         # Improve tour using 2-opt switching (switch all two edges)
         # Keep swapping until no more improvement made
@@ -462,43 +453,32 @@ class Graph:
                     improvement -= self.path_distance(self.data(tour[n-1]), self.data(tour[m-1]))
                     improvement -= self.path_distance(self.data(tour[n]), self.data(tour[m]))
 
-                    print(f" {tour[n]}[{n}] <=> {tour[m-1]}[{m-1}] ({round(improvement,2)})")
                     if  improvement > 0:
                         improved = True
                         # Swap the order of nodes n to m
                         tour[n : m] = reversed(tour[n : m])
 
-                        ### To see if calculated improvement actually works
-                        """cur_tour = 0
-                        for i in range(len(tour)):
-                            cur_tour += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
-                        print(f"Tour impr: {round(pre_tour-cur_tour,2)}")
-
-                        pre_tour = cur_tour
-                        print(f"Current tour: {cur_tour}")
-
-                        print(tour)
-                        print(input("BREAK"))"""
         # Tour must start at "top right point of area"
         # Find closest to "top right"
         shortest_dis = float('inf')
         for node in tour:
-            node_distance = self.path_distance(self.data(node), Vertex(650,0,""))
-            print(f"Node: {node}, {node_distance}")
+            node_distance = self.path_distance(self.data(node), Vertex(bottom_right[0], top_left[1],""))
+
             if node_distance < shortest_dis:
                 shortest_dis = node_distance
                 closest = node
-        print(f"\nCLOSEST: {closest}")
-        print(f"BEFORE SHIFT:\n{tour}")
 
         # Shift list, until front is closest
         while tour[0] != closest:
             tour.insert(0, tour.pop(-1))
 
         tour.append(tour[0])    # Tour must end at start
-        print(f"\n##FINAL PATH##\n{tour}")
-        """print(f"Cost: {pre_tour}")"""
-        return tour
+
+        tour_lenght = 0
+        for i in range(len(tour)):
+            tour_lenght += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+
+        return tuple(tour), tour_lenght
     
     def traverse_to_node1(self, source_node_id):
         # Create an empty list to store the traversed nodes
@@ -643,7 +623,8 @@ graph.populate_flow_rate()
 
 
 # QUESTION 2: "Provide flight path"
-graph.flight_path((0,0), (650,650))
+flight_path, flight_lenght = graph.flight_path((0,0), (650,650))
+print(f"Flight path: {flight_path} \nLenght: {round(flight_lenght,2)}")
 """
 userchoice = 1
 while userchoice != 0:
