@@ -754,62 +754,149 @@ while userchoice != 0:
         break
 """
 """
+
+"""
 #Assignment 3.3, 
 # Question:1
 
-def findCycle(graph, startNode, currentNode, visited, path):
-    # Mark the current node as visited and add it to the path
-    visited[currentNode] = True
-    path.append(currentNode)
-
-    # Check all adjacent nodes of the current node
-    for neighbor in graph[currentNode]:
-        # If the neighbor is the starting node and the path length is 4 ([(3,4,33,42)]), we've found a cycle
-        if neighbor == startNode and len(path) == 4:
-            return path
-
-        # If the neighbor is not visited, recursively search for a cycle starting from it
-        if not visited[neighbor]:
-            cycle = findCycle(graph, startNode, neighbor, visited, path)
-
-            # If a cycle is found, return it
-            if cycle:
-                return cycle
-
-    # If no cycle is found starting from this node, backtrack
-    path.pop()
-    visited[currentNode] = False
-    return None
-
-def findCyclePath(graph):
-    # Initialize visited array to keep track of visited nodes
-    visited = {}
-    for node in graph:
-        visited[node] = False
-
-    # Iterate through all nodes in the graph and start DFS from each unvisited node
-    for startNode in graph:
-        path = []
-        cycle = findCycle(graph, startNode, startNode, visited, path)
-
-        # If a cycle is found, return it
-        if cycle:
-            return cycle
-
-    # If no cycle is found, return None
-    return None
-
-# Example usage:
+# Define the graph as an adjacency list
 graph = {
-    3: [4],
-    4: [33],
-    33: [42],
-    42: [3]
+    1: [42],
+    3: [42, 4],
+    4: [3, 33],
+    5: [33],
+    6: [40],
+    7: [40],
+    8: [43],
+    9: [43],
+    10:[44],
+    11:[60],
+    12:[60],
+    13:[47],
+    14:[48],
+    15:[48],
+    18:[35],
+    19:[35],
+    20:[38],
+    25:[55],
+    31:[54],
+    32:[54],
+    33:[42,34],
+    34:[5,33,59],
+    35:[59,18,19,38],
+    36:[37,35,20],
+    37:[38,39],
+    38:[39,44,49],
+    39:[37,38,55],
+    40:[6,7,41],
+    41:[38,40,43],
+    42:[1,3,4,33],
+    43:[8,9,41],
+    44:[10,47,60],
+    45:[46],
+    46:[45,49,50],
+    47:[13,44,45],
+    48:[14,15,49],
+    49:[38,46,48],
+    50:[46,51,52],
+    51:[50],
+    52:[50,53],
+    53:[52,54],
+    54:[31,32,53],
+    55:[56,39],
+    56:[55,57,58],
+    57:[56],
+    58:[56],
+    59:[34,35],
+    60:[11,12,44]
 }
 
-cyclePath = findCyclePath(graph)
-if cyclePath:
-    print("Cycle found:", cyclePath)
-else:
-    print("No cycle found")
-"""
+
+def find_cycles(graph):
+    def dfs(node, parent, visited, stack):
+        visited[node] = True
+        stack.append(node)
+
+        for neighbor in graph[node]:
+            if not visited[neighbor]:
+                if dfs(neighbor, node, visited, stack):
+                    return True
+            elif neighbor != parent:
+                # Found a back edge, which indicates a cycle
+                print("Cycle detected:", stack[stack.index(neighbor):] + [neighbor])
+                return True
+
+        stack.pop()
+        return False
+
+    num_nodes = len(graph)
+    visited = {node: False for node in graph}
+
+    for node in graph:
+        if not visited[node]:
+            stack = []
+            if dfs(node, None, visited, stack):
+                return True
+
+    return False
+
+#  the provided graph
+graph = {
+    1: [42],
+    3: [42, 4],
+    4: [3, 33],
+    5: [33],
+    6: [40],
+    7: [40],
+    8: [43],
+    9: [43],
+    10:[44],
+    11:[60],
+    12:[60],
+    13:[47],
+    14:[48],
+    15:[48],
+    18:[35],
+    19:[35],
+    20:[38],
+    25:[55],
+    31:[54],
+    32:[54],
+    33:[42,34],
+    34:[5,33,59],
+    35:[59,18,19,38],
+    36:[37,35,20],
+    37:[38,39],
+    38:[39,44,49],
+    39:[37,38,55],
+    40:[6,7,41],
+    41:[38,40,43],
+    42:[1,3,4,33],
+    43:[8,9,41],
+    44:[10,47,60],
+    45:[46],
+    46:[45,49,50],
+    47:[13,44,45],
+    48:[14,15,49],
+    49:[38,46,48],
+    50:[46,51,52],
+    51:[50],
+    52:[50,53],
+    53:[52,54],
+    54:[31,32,53],
+    55:[56,39],
+    56:[55,57,58],
+    57:[56],
+    58:[56],
+    59:[34,35],
+    60:[11,12,44]
+}
+
+find_cycles(graph)
+
+##Provide the function list_cycles()
+
+cycles = find_cycles(graph)
+print("Cycles found:")
+for cycle in cycles:
+    print(cycle)
