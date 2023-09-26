@@ -740,140 +740,80 @@ while userchoice != 0:
 #Assignment 3.3, 
 # Question:1
 
-# Define the graph as an adjacency list
-graph = {
-    1: [42],
-    3: [42, 4],
-    4: [3, 33],
-    5: [33],
-    6: [40],
-    7: [40],
-    8: [43],
-    9: [43],
-    10:[44],
-    11:[60],
-    12:[60],
-    13:[47],
-    14:[48],
-    15:[48],
-    18:[35],
-    19:[35],
-    20:[38],
-    25:[55],
-    31:[54],
-    32:[54],
-    33:[42,34],
-    34:[5,33,59],
-    35:[59,18,19,38],
-    36:[37,35,20],
-    37:[38,39],
-    38:[39,44,49],
-    39:[37,38,55],
-    40:[6,7,41],
-    41:[38,40,43],
-    42:[1,3,4,33],
-    43:[8,9,41],
-    44:[10,47,60],
-    45:[46],
-    46:[45,49,50],
-    47:[13,44,45],
-    48:[14,15,49],
-    49:[38,46,48],
-    50:[46,51,52],
-    51:[50],
-    52:[50,53],
-    53:[52,54],
-    54:[31,32,53],
-    55:[56,39],
-    56:[55,57,58],
-    57:[56],
-    58:[56],
-    59:[34,35],
-    60:[11,12,44]
-}
+import math     # For calculating distance
+import itertools    # For path permutations
+import csv
+
+CSV_FILE = "water_data.csv"
 
 
-def find_cycles(graph):
-    def dfs(node, parent, visited, stack):
-        visited[node] = True
-        stack.append(node)
+# Used for working out if an edge represents a river
+river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge", "sea entrance"}
 
-        for neighbor in graph[node]:
-            if not visited[neighbor]:
-                if dfs(neighbor, node, visited, stack):
-                    return True
-            elif neighbor != parent:
-                # Found a back edge, which indicates a cycle
-                print("Cycle detected:", stack[stack.index(neighbor):] + [neighbor])
-                return True
+source_type = "headwater"
 
-        stack.pop()
-        return False
 
-    num_nodes = len(graph)
-    visited = {node: False for node in graph}
+  
+class Graph:
+     def __init__(self):
+            # Dictionary that stores the adjacency list representation
+        # FORMAT|| node_id: vertex_data -> edge1 -> edge2...
+        self.adjacency_list = {}
 
-    for node in graph:
-        if not visited[node]:
-            stack = []
-            if dfs(node, None, visited, stack):
-                return True
+ 
+    def add_node(self, node_data: dict):
+        # If node has already been added
+        if self.adjacency_list.get(node_data["node_id"]):
+            print("Error: Node is already in graph")
+            print(node_data)
+            return 
 
-    return False
+    def list_cycles(self):
+        def dfs(node, visited, path):
+            visited[node] = True
+            path.append(node)
 
-#  the provided graph
-graph = {
-    1: [42],
-    3: [42, 4],
-    4: [3, 33],
-    5: [33],
-    6: [40],
-    7: [40],
-    8: [43],
-    9: [43],
-    10:[44],
-    11:[60],
-    12:[60],
-    13:[47],
-    14:[48],
-    15:[48],
-    18:[35],
-    19:[35],
-    20:[38],
-    25:[55],
-    31:[54],
-    32:[54],
-    33:[42,34],
-    34:[5,33,59],
-    35:[59,18,19,38],
-    36:[37,35,20],
-    37:[38,39],
-    38:[39,44,49],
-    39:[37,38,55],
-    40:[6,7,41],
-    41:[38,40,43],
-    42:[1,3,4,33],
-    43:[8,9,41],
-    44:[10,47,60],
-    45:[46],
-    46:[45,49,50],
-    47:[13,44,45],
-    48:[14,15,49],
-    49:[38,46,48],
-    50:[46,51,52],
-    51:[50],
-    52:[50,53],
-    53:[52,54],
-    54:[31,32,53],
-    55:[56,39],
-    56:[55,57,58],
-    57:[56],
-    58:[56],
-    59:[34,35],
-    60:[11,12,44]
-}
+            for neighbor_edge in LL_as_array(self.data(node))[1:]:
+                neighbor = neighbor_edge.node
 
-find_cycles(graph)
+                # If the neighbor is not visited, continue DFS
+                if not visited[neighbor]:
+                    if dfs(neighbor, visited, path):
+                        return True
+                elif neighbor in path:
+                    # Found a cycle
+                    cycle_start = path.index(neighbor)
+                    cycle = path[cycle_start:]
+                    cycles.append(cycle)
+
+            path.pop()
+            return False
+
+        visited = {node: False for node in self.adjacency_list}
+        cycles = []
+
+        for node in self.adjacency_list:
+            if not visited[node]:
+                dfs(node, visited, [])
+
+        return cycles
+
+# Usage:
+if __name__ == "__main__":
+    
+
+    # Initialize the Graph class
+    my_graph = Graph()
+
+    # Find cycles in the graph
+    cycles = my_graph.list_cycles()
+
+    if cycles:
+        print("Cycles found:")
+        for cycle in cycles:
+            print(cycle)
+    else:
+        print("No cycles found in the graph.")
 
 ##Provide the function list_cycles()
 
