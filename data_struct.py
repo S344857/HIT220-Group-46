@@ -475,11 +475,44 @@ class Graph:
         tour.append(tour[0])    # Tour must end at start
 
         tour_lenght = 0
-        for i in range(len(tour)):
-            tour_lenght += self.path_distance(self.data(tour[i-1]), self.data(tour[i]))
+        for i in range(len(tour)-1):
+            tour_lenght += self.path_distance(self.data(tour[i]), self.data(tour[i+1]))
 
         return tuple(tour), tour_lenght
     
+    # Return list of all cycles in graph
+    def list_cycles(self):
+        def dfs(node, visited, path):
+            visited[node] = True
+            path.append(node)
+
+            for neighbor_edge in LL_as_array(self.data(node))[1:]:
+                neighbor = neighbor_edge.node
+
+                # If the neighbor is not visited, continue DFS
+                if not visited[neighbor]:
+                    if dfs(neighbor, visited, path):
+                        return True
+                # Found a cycle
+                elif neighbor in path:
+                    # Cycle starts at repeated step
+                    cycle = path[path.index(neighbor):]
+                    cycle.append(neighbor)  # Cycle must end up at start
+                    cycles.append(tuple(cycle))
+
+            path.pop()
+            return False
+
+        visited = {node: False for node in self.adjacency_list}
+        cycles = []
+
+        for node in self.adjacency_list:
+            if not visited[node]:
+                dfs(node, visited, [])
+
+        return cycles
+
+
     def traverse_to_node1(self, source_node_id):
         # Create an empty list to store the traversed nodes
         traversed_nodes = []
@@ -621,10 +654,15 @@ graph.populate_distance()
 graph.populate_flow_rate()
 
 
+### Assignment 3.3
+# QUESTION 1: "Find cycles"
+print("Cycles:")
+for cycle in graph.list_cycles():
+    print(f"\t{cycle}")
 
 # QUESTION 2: "Provide flight path"
 flight_path, flight_lenght = graph.flight_path((0,0), (650,650))
-print(f"Flight path: {flight_path} \nLenght: {round(flight_lenght,2)}")
+print(f"\nFlight path: {flight_path} \nLenght: {round(flight_lenght,2)}")
 """
 userchoice = 1
 while userchoice != 0:
@@ -734,90 +772,3 @@ while userchoice != 0:
     else:
         break
 """
-"""
-
-"""
-#Assignment 3.3, 
-# Question:1
-
-import math     # For calculating distance
-import itertools    # For path permutations
-import csv
-
-CSV_FILE = "water_data.csv"
-
-
-# Used for working out if an edge represents a river
-river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge", "sea entrance"}
-
-source_type = "headwater"
-
-
-  
-class Graph:
-     def __init__(self):
-            # Dictionary that stores the adjacency list representation
-        # FORMAT|| node_id: vertex_data -> edge1 -> edge2...
-        self.adjacency_list = {}
-
- 
-    def add_node(self, node_data: dict):
-        # If node has already been added
-        if self.adjacency_list.get(node_data["node_id"]):
-            print("Error: Node is already in graph")
-            print(node_data)
-            return 
-
-    def list_cycles(self):
-        def dfs(node, visited, path):
-            visited[node] = True
-            path.append(node)
-
-            for neighbor_edge in LL_as_array(self.data(node))[1:]:
-                neighbor = neighbor_edge.node
-
-                # If the neighbor is not visited, continue DFS
-                if not visited[neighbor]:
-                    if dfs(neighbor, visited, path):
-                        return True
-                elif neighbor in path:
-                    # Found a cycle
-                    cycle_start = path.index(neighbor)
-                    cycle = path[cycle_start:]
-                    cycles.append(cycle)
-
-            path.pop()
-            return False
-
-        visited = {node: False for node in self.adjacency_list}
-        cycles = []
-
-        for node in self.adjacency_list:
-            if not visited[node]:
-                dfs(node, visited, [])
-
-        return cycles
-
-# Usage:
-if __name__ == "__main__":
-    
-
-    # Initialize the Graph class
-    my_graph = Graph()
-
-    # Find cycles in the graph
-    cycles = my_graph.list_cycles()
-
-    if cycles:
-        print("Cycles found:")
-        for cycle in cycles:
-            print(cycle)
-    else:
-        print("No cycles found in the graph.")
-
-##Provide the function list_cycles()
-
-cycles = find_cycles(graph)
-print("Cycles found:")
-for cycle in cycles:
-    print(cycle)
