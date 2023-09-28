@@ -596,6 +596,34 @@ class Graph:
     def get_formatted_input_sequence(self, input_sequence, list):
         filtered_input_sequence = [tup for tup in input_sequence if tup[0] in list]
         return filtered_input_sequence
+    
+     # Returns all headwater within a given region
+    # top_left/bottom_right: (x, y)
+    def headwater_in_region(self, top_left: tuple, bottom_right: tuple):
+        if len(top_left) != 2 or len(bottom_right) != 2:
+            raise ValueError("Region courner(s) must have two arguments (x, y)")
+        
+        top_left_x = 0 if top_left[0] < 0 else top_left[0]
+        top_left_y = 0 if top_left[1] < 0 else top_left[1]
+        
+        bottom_right_x = 650 if bottom_right[0] > 650 else bottom_right[0]
+        bottom_right_y = 650 if bottom_right[1] > 650 else bottom_right[1]
+            
+
+        in_region = []  # All nodes found within region
+        for node in self.adjacency_list:
+            node_data = self.data(node)
+            if node_data.type == source_type:
+                if (
+                    node_data.x >= top_left_x
+                    and node_data.x <= bottom_right_x
+                ) and (
+                    node_data.y >= top_left_y
+                    and node_data.y <= bottom_right_y
+                ):
+                    in_region.append(node)
+
+        return in_region
 
     def chemical_source(self, input_sequence):
         possible_headwaters = []
@@ -673,14 +701,32 @@ class Graph:
                 if difference_nodes_list_len == 1:
                     # check if the single node is directly connected to a headwater
                     # if directly connected to a headwater, add as possible contamination node
-                    direct_source_list = self.check_direct_connection_to_headwater(node_id=difference_nodes_list[0], traversal_dict=headwater_node_traversals)
-                    possible_source_pool.extend(direct_source_list)                
-                # if not directly connected to a headwater
-                else:
-                    pass
-                # check the region for any near headwater source
-               
-                
+                    differnce_node_id = difference_nodes_list[0]
+                    direct_source_list = self.check_direct_connection_to_headwater(node_id=differnce_node_id, traversal_dict=headwater_node_traversals)
+                    # if there is directly connected headwwater
+                    if len(direct_source_list) > 0:
+                        possible_source_pool.extend(direct_source_list)
+                    # if not directly connected to a headwater, there might be seepage from another node
+                    else:
+                        # check the region for any near headwater source
+                        differnce_node_data = self.data(differnce_node_id)
+                        # get top left coord
+                        top_left = ((differnce_node_data.x-50),(differnce_node_data.y-50))
+                        # get bottom right coord
+                        bottom_right = ((differnce_node_data.x+50),(differnce_node_data.y+50))
+                        #get list of headwater in the region
+                        headwater_in_region_list = self.headwater_in_region(top_left=top_left, bottom_right=bottom_right)
+                        
+                        # variable to store the distance of each of the nodes in the region with the `differnce_node_id`
+                        temp_distance = {}
+                        
+                        # calculate distance 
+                        for vertex_id in headwater_in_region_list:
+                            vertex_data = self.data(vertex_id)
+                            temp_distance[vertex_id] = self.path_distance(differnce_node_data, vertex_data)
+                        # add the node is with the least distance to the `differnce_node_id` to the possible_source_pool
+                        possible_source_pool.append(min(temp_distance, key=temp_distance.get))
+                        
                 # if there are more nodes in the difference_nodes_list, use recursion to get possible nodes and append to possible_source_pool list
                 # get sub-list of the tuple with concentration data that are present in the difference_nodes_list
                 difference_input_sequence = self.get_formatted_input_sequence(list=difference_nodes_list, input_sequence=input_sequence)
@@ -691,9 +737,13 @@ class Graph:
         possible_source_pool = list(dict.fromkeys(possible_source_pool))
         print(f'possible_source_pool:{possible_source_pool}')
         
-        # check the sum of squared of the distance
-
-        # check if the headwater to node 1 traversal has the same as the least sum of squared nodes
+        # if the `possible_source_pool` is not empty
+        if len(possible_source_pool) != 0:
+        
+            # check the sum of squared of the distance
+            
+            # add the node_id with the leas sum of squared to the `possible_headwaters`
+            pass
 
         # return the nodes
         return possible_headwaters
@@ -803,8 +853,10 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
+# print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
 # print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
+print(graph.chemical_source([(58,3),(55,10),(50,5)]))  # Expected: [2]
+
 
 # graph.get_headwater_from_junction(43)
 # graph.get_headwaters_traversal_list_to_final()
