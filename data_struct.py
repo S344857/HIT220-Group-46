@@ -696,6 +696,22 @@ class Graph:
                 if common_nodes_list_len == 0 or common_nodes_list_len == 1:
                     continue
                 
+                node_index_dict = {}
+                for item in common_nodes_list:
+                    index = headwater_node_traversals[node].index(item)
+                    node_index_dict[item] = index
+                # rearrange the observed nodes in traversed order
+                # sort the nodes_index in ascending order of there values, i.e. index
+                node_index_dict = {
+                    k: v for k, v in sorted(node_index_dict.items(), key=lambda item: item[1])
+                }
+                # check if the items are in order of traversal
+                in_sequence = self.is_incremental_sequence(node_index_dict)
+                if not in_sequence:
+                    for common_node in common_nodes_list:
+                        direct_source_list = self.check_direct_connection_to_headwater(node_id=common_node, traversal_dict=headwater_node_traversals)
+                        possible_source_pool.extend(direct_source_list)
+                
 
                 # if there is group of node in a traversal path
                 # get sub-list of the tuple with concentration data that are present in the common_nodes_list
@@ -747,9 +763,6 @@ class Graph:
                 difference_input_sequence = self.get_formatted_input_sequence(list=difference_nodes_list, input_sequence=input_sequence)
                 possible_source_pool.extend(self.chemical_source(difference_input_sequence))
                     
-
-       
-        
         # if the `possible_source_pool` is not empty
         if len(possible_source_pool) != 0:
             # remove duplicates from possible_source_pool
@@ -767,7 +780,10 @@ class Graph:
                 sum_of_squared[possible_node] = self.get_sum_of_square(temp_distance)
             # add the node_id with the least sum of squared to the `possible_headwaters`
             possible_headwaters.append(min(sum_of_squared, key=sum_of_squared.get))
+            print(f'possible node value: {possible_source_pool}')
 
+        # remove repeated values
+        possible_headwaters = list(dict.fromkeys(possible_headwaters))
         # return the nodes
         return possible_headwaters
 
@@ -877,7 +893,7 @@ graph.populate_distance()
 graph.populate_flow_rate()
 
 print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
-# print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
+print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
 
 
 # graph.get_headwater_from_junction(43)
