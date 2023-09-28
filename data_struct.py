@@ -678,18 +678,12 @@ class Graph:
                 if result is not None:
                     possible_headwaters.append(result)
                     
-                # print(f"{node} -> {headwater_node_traversals[node]}")
-                # print(all_observed_in_path)
 
             # if all the given node are not in a single traversal
             else:
-                # print(f"{node} -> {headwater_node_traversals[node]}")
-                # print(f"Observed nodes: {observed_nodes}")
                 
                 # separate the input_sequence into those in the sequence and individual node
                 common_nodes_list, difference_nodes_list = self.find_common_and_difference(observed_nodes, headwater_node_traversals[node])
-                # print(f'node_id: {node}\ncommon: {common_nodes_list}\ndiffernce: {difference_nodes_list}')
-                
                 
                 # if there is no common nodes between the two list, then skip
                 common_nodes_list_len = len(common_nodes_list)
@@ -716,7 +710,7 @@ class Graph:
                 # if there is group of node in a traversal path
                 # get sub-list of the tuple with concentration data that are present in the common_nodes_list
                 common_input_sequence = self.get_formatted_input_sequence(list=common_nodes_list, input_sequence=input_sequence)
-                # print(f'filtered input seq: {filtered_input_sequence}')
+
                 # get the likely nodes using recursion and append to possible_source_pool list
                 possible_source_pool.extend(self.chemical_source(common_input_sequence))
                 # print(f'Possible source pool for {node}: {possible_source_pool}')
