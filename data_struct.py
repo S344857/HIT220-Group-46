@@ -544,6 +544,10 @@ class Graph:
         for node, conc in input_sequence:
             observed_nodes.append(node)
             concentration_dict[node] = conc
+            
+            # if the node is a `headwater` itself, add as possible contamination source
+            if self.data(node).type == source_type:
+                possible_headwaters.append(node)
 
         # get headwater source of the junction
         headwater_node_traversals = self.get_headwaters_traversal_list_to_final()
@@ -584,13 +588,29 @@ class Graph:
 
                 print(f"{node} -> {headwater_node_traversals[node]}")
                 print(all_observed_in_path)
+            
+            # if all the given node are not in a single traversal 
             else:
-                # check
+                # separate the input_sequence into those in the sequence and individual node
+                
+                # if the is group of node in a traversal path
+                
+                # if there is one node not in the traversed path
+                    # check if the single node is directly connected to a headwater
+                        # if directly connected to a headwater, add as possible contamination node
+                    
+                    # if not directly connected to a headwater
+                        # check the region for any near headwater source
+                        
+                        # if single headwater near the junction
+                            # add that headwater as a possible source of contamination
+                        
+                        # if a number of headwater is found
+                            # use sum squared method using distance and select with the least value
+                        
                 pass
 
-        # get the traversal from the headwater node to the node 1
-        # check if the traversal node is in the observed nodes
-
+        
         # check the sum of squared of the distance
 
         # check if the headwater to node 1 traversal has the same as the least sum of squared nodes
