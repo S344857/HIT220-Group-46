@@ -520,18 +520,61 @@ class Graph:
         # print(traversal_list)
         return traversal_list
 
-    def is_incremental_sequence(self,d):
+    def is_incremental_sequence(self, d):
         sorted_values = sorted(d.values())
-        return all(sorted_values[i] - sorted_values[i-1] == 1 for i in range(1, len(sorted_values)))
-    
+        return all(
+            sorted_values[i] - sorted_values[i - 1] == 1
+            for i in range(1, len(sorted_values))
+        )
+
     def is_descending_concentration(self, lst):
         concentrations = [t[1] for t in lst]
-        return all(concentrations[i] >= concentrations[i+1] for i in range(len(concentrations)-1))
-    
+        return all(
+            concentrations[i] >= concentrations[i + 1]
+            for i in range(len(concentrations) - 1)
+        )
+
     def sort_observation(self, observation, node_index_dict):
         sorted_observation = sorted(observation, key=lambda x: node_index_dict[x[0]])
         return sorted_observation
 
+    # 
+    def all_contamination_nodes_in_traversal(
+        self, current_node, observed_nodes, headwater_node_traversals, input_sequence
+    ):
+        contaminated_node = None
+        # save index of each node in a vairalbe
+        node_index_dict = {}
+        for item in observed_nodes:
+            index = headwater_node_traversals[current_node].index(item)
+            node_index_dict[item] = index
+        print(node_index_dict)
+        # rearrange the observed nodes in traversed order
+        # sort the nodes_index in ascending order of there values, i.e. index
+        node_index_dict = {
+            k: v for k, v in sorted(node_index_dict.items(), key=lambda item: item[1])
+        }
+
+        # check if the items are in order of traversal
+        in_sequence = self.is_incremental_sequence(node_index_dict)
+
+        # sort the observation using `node_index_dict` values
+        input_sequence = self.sort_observation(
+            observation=input_sequence, node_index_dict=node_index_dict
+        )
+
+        # check if there is constant linear reduction, add the headwater as possible source
+        in_descending_concentration = self.is_descending_concentration(input_sequence)
+
+        # if the observed nodes are in sequence, in linearly reduced concentration and the first node gets direct flow from the headwater, then add node as possible contamination source
+        if (
+            in_sequence
+            and in_descending_concentration
+            and next(iter(node_index_dict.values())) == 1
+        ):
+            contaminated_node =current_node
+
+        return contaminated_node
 
     def chemical_source(self, input_sequence):
         possible_headwaters = []
@@ -544,7 +587,7 @@ class Graph:
         for node, conc in input_sequence:
             observed_nodes.append(node)
             concentration_dict[node] = conc
-            
+
             # if the node is a `headwater` itself, add as possible contamination source
             if self.data(node).type == source_type:
                 possible_headwaters.append(node)
@@ -559,60 +602,43 @@ class Graph:
             )
             # if all the nodes are present in the traversal
             if all_observed_in_path is True:
-                # save index of each node in a vairalbe
-                node_index_dict = {}
-                for item in observed_nodes:
-                    index = headwater_node_traversals[node].index(item)
-                    node_index_dict[item] = index
-                print(node_index_dict)
-                # rearrange the observed nodes in traversed order
-                # sort the nodes_index in ascending order of there values, i.e. index
-                node_index_dict = {k: v for k, v in sorted(node_index_dict.items(), key=lambda item: item[1])}
+                # check if current node is source of contaminaiton
+                result = self.all_contamination_nodes_in_traversal(
+                    current_node=node,
+                    observed_nodes=observed_nodes,
+                    headwater_node_traversals=headwater_node_traversals,
+                    input_sequence=input_sequence,
+                )
                 
-                #check if the items are in order of traversal
-                in_sequence = self.is_incremental_sequence(node_index_dict)
-                
-                # sort the observation using `node_index_dict` values
-                input_sequence = self.sort_observation(observation=input_sequence, node_index_dict=node_index_dict)
-                
-                # check if there is constant linear reduction, add the headwater as possible source
-                in_descending_concentration = self.is_descending_concentration(input_sequence)
-                
-                # if the observed nodes are in sequence, in linearly reduced concentration and the first node gets direct flow from the headwater, then add node to possible contamination source
-                if in_sequence and in_descending_concentration and next(iter(node_index_dict.values())) == 1:
-                    possible_headwaters.append(node)
-                
-                
-                
-
-
+                if result is not None:
+                    possible_headwaters.append(result)
+                    
                 print(f"{node} -> {headwater_node_traversals[node]}")
                 print(all_observed_in_path)
-            
-            # if all the given node are not in a single traversal 
+
+            # if all the given node are not in a single traversal
             else:
                 # separate the input_sequence into those in the sequence and individual node
-                print(f"{node} -> {headwater_node_traversals[node]}")
-                print(f'Observed nodes: {observed_nodes}')
-                
+                # print(f"{node} -> {headwater_node_traversals[node]}")
+                # print(f"Observed nodes: {observed_nodes}")
+
                 # if the is group of node in a traversal path
-                
+
                 # if there is one node not in the traversed path
-                    # check if the single node is directly connected to a headwater
-                        # if directly connected to a headwater, add as possible contamination node
-                    
-                    # if not directly connected to a headwater
-                        # check the region for any near headwater source
-                        
-                        # if single headwater near the junction
-                            # add that headwater as a possible source of contamination
-                        
-                        # if a number of headwater is found
-                            # use sum squared method using distance and select with the least value
-                        
+                # check if the single node is directly connected to a headwater
+                # if directly connected to a headwater, add as possible contamination node
+
+                # if not directly connected to a headwater
+                # check the region for any near headwater source
+
+                # if single headwater near the junction
+                # add that headwater as a possible source of contamination
+
+                # if a number of headwater is found
+                # use sum squared method using distance and select with the least value
+
                 pass
 
-        
         # check the sum of squared of the distance
 
         # check if the headwater to node 1 traversal has the same as the least sum of squared nodes
@@ -725,8 +751,8 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
-# print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
+# print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
+print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
 
 # graph.get_headwater_from_junction(43)
 # graph.get_headwaters_traversal_list_to_final()
