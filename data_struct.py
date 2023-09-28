@@ -9,6 +9,62 @@ river_types = {"Katherine", "junction", "headwater", "Daley River", "flowgauge",
 
 source_type = "headwater"
 
+# Class to represent nodes in the Trie
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end_of_word = False
+
+# Class to define Trie methods
+class Trie:
+    def __init__(self, words):
+        self.root = TrieNode()
+
+        for word in words:
+            self.insert_word(word)
+
+    # Function to insert a word into the Trie
+    def insert_word(self, word):
+        node = self.root
+        # Insert all characters individually
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end_of_word = True
+    
+    # Membership testing
+    def __contains__(self, word: str):
+        child_node = self.root
+
+        for char in word:
+            #print(f"Is '{char}' in {set(child_node.children.keys())}")
+            if char not in child_node.children:
+                return False
+            child_node = child_node.children[char]
+        
+        # Only return true if at end of word
+        return child_node.is_end_of_word
+    
+
+    # Encoding individual characters implementing ASCII value represented in 8-bit binary
+    def encode_char(self, char):
+        return format(ord(char), '08b')
+
+    # Encodes the full word by traversing the Trie
+    def encode_word(self, word):
+        node = self.root
+        encoded_word = ""
+        for char in word:
+            if char in node.children:
+                encoded_word += self.encode_char(char)
+                node = node.children[char]
+            else:
+                # Handle characters not found in the Trie
+                encoded_word += self.encode_char('*')  # Encode as a special character
+                break
+        return encoded_word
+
 
 # Stores data about an edge in the graph
 class Edge:
@@ -453,7 +509,7 @@ class Graph:
                     improvement -= self.path_distance(self.data(tour[n-1]), self.data(tour[m-1]))
                     improvement -= self.path_distance(self.data(tour[n]), self.data(tour[m]))
 
-                    if  improvement > 0:
+                    if improvement > 0:
                         improved = True
                         # Swap the order of nodes n to m
                         tour[n : m] = reversed(tour[n : m])
@@ -662,7 +718,24 @@ for cycle in graph.list_cycles():
 
 # QUESTION 2: "Provide flight path"
 flight_path, flight_lenght = graph.flight_path((0,0), (650,650))
-print(f"\nFlight path: {flight_path} \nLenght: {round(flight_lenght,2)}")
+print(f"\nFlight path: {flight_path} \nLenght: {round(flight_lenght,2)}\n")
+
+
+
+# QUESTION 4: "Trie of river names"
+river_trie = Trie(("PineCreek",))
+
+#   River isn't in Trie yet
+river_to_find = "DalyRiver"
+print(f"Is '{river_to_find}' in Trie? {river_to_find in river_trie}")
+
+#   Insert river then test again
+river_trie.insert_word(river_to_find)
+print(f"Is '{river_to_find}' in Trie? {river_to_find in river_trie}")
+
+for word_to_encode in ("DalyRiver", "PineCreek"):
+    print(f"Encoded string for '{word_to_encode}': {river_trie.encode_word(word_to_encode)}")
+
 """
 userchoice = 1
 while userchoice != 0:
