@@ -592,6 +592,8 @@ class Graph:
             # if all the given node are not in a single traversal 
             else:
                 # separate the input_sequence into those in the sequence and individual node
+                print(f"{node} -> {headwater_node_traversals[node]}")
+                print(f'Observed nodes: {observed_nodes}')
                 
                 # if the is group of node in a traversal path
                 
@@ -723,8 +725,8 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-# print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
-print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
+print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
+# print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
 
 # graph.get_headwater_from_junction(43)
 # graph.get_headwaters_traversal_list_to_final()
