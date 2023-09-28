@@ -593,6 +593,7 @@ class Graph:
                 connected_to_list.append(node)
         return connected_to_list
     
+    # formats data to list of tuples
     def get_formatted_input_sequence(self, input_sequence, list):
         filtered_input_sequence = [tup for tup in input_sequence if tup[0] in list]
         return filtered_input_sequence
@@ -625,6 +626,7 @@ class Graph:
 
         return in_region
     
+    # returns the sum of squared of the input data
     def get_sum_of_square(self, data):
         # Compute the sum of all values
         total_sum = sum(data.values())
@@ -640,6 +642,7 @@ class Graph:
 
         return sum_of_squares
 
+    # give the most likely source of chemical contamination
     def chemical_source(self, input_sequence):
         possible_headwaters = []
 
@@ -774,7 +777,6 @@ class Graph:
                 sum_of_squared[possible_node] = self.get_sum_of_square(temp_distance)
             # add the node_id with the least sum of squared to the `possible_headwaters`
             possible_headwaters.append(min(sum_of_squared, key=sum_of_squared.get))
-            print(f'possible node value: {possible_source_pool}')
 
         # remove repeated values
         possible_headwaters = list(dict.fromkeys(possible_headwaters))
@@ -888,7 +890,3 @@ graph.populate_flow_rate()
 
 print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
 print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
-
-
-# graph.get_headwater_from_junction(43)
-# graph.get_headwaters_traversal_list_to_final()
