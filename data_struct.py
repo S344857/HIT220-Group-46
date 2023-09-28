@@ -501,7 +501,7 @@ class Graph:
             print("Node 1 is not reachable from the source node.")
         return traversed_nodes
 
-    def get_headwater_node_id(self):
+    def get_headwater_nodes_id(self):
         headwater_nodes = []
 
         # filter the all nodes
@@ -513,7 +513,7 @@ class Graph:
         return headwater_nodes
 
     def get_headwaters_traversal_list_to_final(self):
-        headwater_nodes = self.get_headwater_node_id()
+        headwater_nodes = self.get_headwater_nodes_id()
         traversal_list = {}
         for node_id in headwater_nodes:
             traversal_list[node_id] = self.traverse_to_final_outlet(node_id)
@@ -537,8 +537,14 @@ class Graph:
     def sort_observation(self, observation, node_index_dict):
         sorted_observation = sorted(observation, key=lambda x: node_index_dict[x[0]])
         return sorted_observation
+    
+    def find_common_and_difference(self,list1, list2):
+        common_elements = [item for item in list1 if item in list2]
+        difference_elements = [item for item in list1 if item not in list2]
 
-    # 
+        return common_elements, difference_elements
+
+    # checks if the `current_node` is source of contamination or not
     def all_contamination_nodes_in_traversal(
         self, current_node, observed_nodes, headwater_node_traversals, input_sequence
     ):
@@ -548,7 +554,6 @@ class Graph:
         for item in observed_nodes:
             index = headwater_node_traversals[current_node].index(item)
             node_index_dict[item] = index
-        print(node_index_dict)
         # rearrange the observed nodes in traversed order
         # sort the nodes_index in ascending order of there values, i.e. index
         node_index_dict = {
@@ -565,8 +570,12 @@ class Graph:
 
         # check if there is constant linear reduction, add the headwater as possible source
         in_descending_concentration = self.is_descending_concentration(input_sequence)
+        
+        # if the input_sequence has the first node gets direct flow from the headwater, then add node as possible contamination source
+        if( next(iter(node_index_dict.values())) == 1):
+            contaminated_node =current_node
 
-        # if the observed nodes are in sequence, in linearly reduced concentration and the first node gets direct flow from the headwater, then add node as possible contamination source
+        # if the observed nodes are in sequence and in linearly reduced concentration, then add node as possible contamination source
         if (
             in_sequence
             and in_descending_concentration
@@ -575,6 +584,18 @@ class Graph:
             contaminated_node =current_node
 
         return contaminated_node
+    
+    # returns all directly connected headwater sources
+    def check_direct_connection_to_headwater(self, node_id, traversal_dict):
+        connected_to_list = []
+        for node in traversal_dict:
+            if traversal_dict[node][1] == node_id:
+                connected_to_list.append(node)
+        return connected_to_list
+    
+    def get_formatted_input_sequence(self, input_sequence, list):
+        filtered_input_sequence = [tup for tup in input_sequence if tup[0] in list]
+        return filtered_input_sequence
 
     def chemical_source(self, input_sequence):
         possible_headwaters = []
@@ -582,7 +603,8 @@ class Graph:
         # Extracting all node ids from sequence for easy lookup
         observed_nodes = []
         concentration_dict = {}
-
+        possible_source_pool = []
+        
         # extract the given observation for ease use
         for node, conc in input_sequence:
             observed_nodes.append(node)
@@ -613,32 +635,62 @@ class Graph:
                 if result is not None:
                     possible_headwaters.append(result)
                     
-                print(f"{node} -> {headwater_node_traversals[node]}")
-                print(all_observed_in_path)
+                # print(f"{node} -> {headwater_node_traversals[node]}")
+                # print(all_observed_in_path)
 
             # if all the given node are not in a single traversal
             else:
-                # separate the input_sequence into those in the sequence and individual node
                 # print(f"{node} -> {headwater_node_traversals[node]}")
                 # print(f"Observed nodes: {observed_nodes}")
+                
+                # separate the input_sequence into those in the sequence and individual node
+                common_nodes_list, difference_nodes_list = self.find_common_and_difference(observed_nodes, headwater_node_traversals[node])
+                # print(f'node_id: {node}\ncommon: {common_nodes_list}\ndiffernce: {difference_nodes_list}')
+                
+                
+                # if there is no common nodes between the two list, then skip
+                common_nodes_list_len = len(common_nodes_list)
+                if common_nodes_list_len == 0 or common_nodes_list_len == 1:
+                    continue
+                
 
-                # if the is group of node in a traversal path
+                # if there is group of node in a traversal path
+                # get sub-list of the tuple with concentration data that are present in the common_nodes_list
+                common_input_sequence = self.get_formatted_input_sequence(list=common_nodes_list, input_sequence=input_sequence)
+                # print(f'filtered input seq: {filtered_input_sequence}')
+                # get the likely nodes using recursion and append to possible_source_pool list
+                possible_source_pool.extend(self.chemical_source(common_input_sequence))
+                # print(f'Possible source pool for {node}: {possible_source_pool}')
 
                 # if there is one node not in the traversed path
-                # check if the single node is directly connected to a headwater
-                # if directly connected to a headwater, add as possible contamination node
-
+                difference_nodes_list_len = len(difference_nodes_list)
+                
+                # if the difference_nodes_list is empty then `continue`
+                if difference_nodes_list_len == 0:
+                    continue
+                
+                # if there is only on node in the difference list
+                if difference_nodes_list_len == 1:
+                    # check if the single node is directly connected to a headwater
+                    # if directly connected to a headwater, add as possible contamination node
+                    direct_source_list = self.check_direct_connection_to_headwater(node_id=difference_nodes_list[0], traversal_dict=headwater_node_traversals)
+                    possible_source_pool.extend(direct_source_list)                
                 # if not directly connected to a headwater
+                else:
+                    pass
                 # check the region for any near headwater source
+               
+                
+                # if there are more nodes in the difference_nodes_list, use recursion to get possible nodes and append to possible_source_pool list
+                # get sub-list of the tuple with concentration data that are present in the difference_nodes_list
+                difference_input_sequence = self.get_formatted_input_sequence(list=difference_nodes_list, input_sequence=input_sequence)
+                possible_source_pool.extend(self.chemical_source(difference_input_sequence))
+                    
 
-                # if single headwater near the junction
-                # add that headwater as a possible source of contamination
-
-                # if a number of headwater is found
-                # use sum squared method using distance and select with the least value
-
-                pass
-
+        # remove duplicates from possible_source_pool
+        possible_source_pool = list(dict.fromkeys(possible_source_pool))
+        print(f'possible_source_pool:{possible_source_pool}')
+        
         # check the sum of squared of the distance
 
         # check if the headwater to node 1 traversal has the same as the least sum of squared nodes
@@ -751,8 +803,8 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-# print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
-print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
+print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
+# print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
 
 # graph.get_headwater_from_junction(43)
 # graph.get_headwaters_traversal_list_to_final()
