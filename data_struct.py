@@ -624,6 +624,21 @@ class Graph:
                     in_region.append(node)
 
         return in_region
+    
+    def get_sum_of_square(self, data):
+        # Compute the sum of all values
+        total_sum = sum(data.values())
+
+        # Get the number of entries in the dictionary
+        length = len(data)
+
+        # Calculate the average
+        average = total_sum / length
+
+        # Subtract average from each value, square the result and sum all squared values
+        sum_of_squares = sum((value - average) ** 2 for value in data.values())
+
+        return sum_of_squares
 
     def chemical_source(self, input_sequence):
         possible_headwaters = []
@@ -733,17 +748,25 @@ class Graph:
                 possible_source_pool.extend(self.chemical_source(difference_input_sequence))
                     
 
-        # remove duplicates from possible_source_pool
-        possible_source_pool = list(dict.fromkeys(possible_source_pool))
-        print(f'possible_source_pool:{possible_source_pool}')
+       
         
         # if the `possible_source_pool` is not empty
         if len(possible_source_pool) != 0:
-        
-            # check the sum of squared of the distance
-            
-            # add the node_id with the leas sum of squared to the `possible_headwaters`
-            pass
+            # remove duplicates from possible_source_pool
+            possible_source_pool = list(dict.fromkeys(possible_source_pool))
+            # variable to store the sum of squared distance
+            sum_of_squared = {}
+            # calculate sum of squared of the distance of each observed node with possible nodes
+            # iterating over the `possible_node`
+            for possible_node in possible_source_pool:
+                # temporary variable to store distance between 
+                temp_distance = {}
+                for observed_node in observed_nodes:
+                    temp_distance_value = self.path_distance(self.data(possible_node), self.data(observed_node))
+                    temp_distance[observed_node] = temp_distance_value
+                sum_of_squared[possible_node] = self.get_sum_of_square(temp_distance)
+            # add the node_id with the least sum of squared to the `possible_headwaters`
+            possible_headwaters.append(min(sum_of_squared, key=sum_of_squared.get))
 
         # return the nodes
         return possible_headwaters
@@ -853,9 +876,8 @@ parse_csv_into_adjacency_list(graph)
 graph.populate_distance()
 graph.populate_flow_rate()
 
-# print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
+print(graph.chemical_source([(58,3),(55,10),(52,5)]))  # Expected: [25]
 # print(graph.chemical_source([(57, 10), (56, 5), (55, 2)]))  # Expected: [22, 21]
-print(graph.chemical_source([(58,3),(55,10),(50,5)]))  # Expected: [2]
 
 
 # graph.get_headwater_from_junction(43)
